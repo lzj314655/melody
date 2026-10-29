@@ -20,8 +20,6 @@ services:
       - --default-time-zone=+08:00
     volumes:
       - mysql-data:/var/lib/mysql
-      # 初始化导入 SQL 时客户端强制 utf8mb4（否则默认 latin1 会把中文双重编码）
-      - ./deploy/mysql-charset.cnf:/etc/mysql/conf.d/charset.cnf:ro
       # 首次启动自动按序建库 + 导入演示数据
       - ./backend/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./backend/sql/data-init.sql:/docker-entrypoint-initdb.d/02-data-init.sql:ro
