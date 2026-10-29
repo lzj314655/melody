@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>确认订单 - 麦乐迪零食</title>
+  <link rel="stylesheet" href="styles/common.css">
+  <style>
+    .fn-tag {
+      background: #FAFAFA;
+      color: var(--text-tertiary);
+      font-size: var(--text-xs);
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--space-4);
+      display: inline-block;
+    }
+
+    /* 步骤条 */
+    .steps {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-6) 0;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      margin-bottom: var(--space-5);
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      color: var(--text-tertiary);
+    }
+    .step .num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--border-light);
+      color: var(--text-tertiary);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600;
+    }
+    .step.active .num {
+      background: var(--primary-gradient);
+      color: #fff;
+    }
+    .step.active { color: var(--primary); font-weight: 600; }
+    .step.done .num {
+      background: var(--success);
+      color: #fff;
+    }
+    .step.done { color: var(--success); }
+    .step .label { font-size: var(--text-base); }
+    .steps .arrow {
+      width: 60px;
+      height: 2px;
+      background: var(--border);
+      margin: 0 var(--space-3);
+    }
+    .steps .arrow.done { background: var(--success); }
+
+    /* 区块 */
+    .section {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-5);
+      margin-bottom: var(--space-4);
+    }
+    .section h2 {
+      font-size: var(--text-md);
+      font-weight: 700;
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section h2 .actions { font-size: var(--text-sm); font-weight: 400; }
+    .section h2 .actions a { color: var(--primary); margin-left: 12px; }
+
+    /* 收货地址 */
+    .addr-card {
+      border: 2px solid var(--primary);
+      background: var(--primary-bg);
+      border-radius: var(--radius);
+      padding: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-3);
+      position: relative;
+    }
+    .addr-card::before {
+      content: "默认";
+      position: absolute;
+      top: -10px; left: 16px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+    }
+    .addr-card .info { flex: 1; }
+    .addr-card .name-phone {
+      font-size: var(--text-md);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .addr-card .name-phone .name { margin-right: 12px; }
+    .addr-card .name-phone .tag {
+      background: var(--primary);
+      color: #fff;
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: var(--radius-sm);
+      margin-left: 6px;
+    }
+    .addr-card .detail { color: var(--text-secondary); font-size: var(--text-sm); }
+
+    .addr-card-simple {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-3) var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-2);
+      background: var(--bg-card);
+    }
+    .addr-card-simple .info { flex: 1; }
+    .addr-card-simple .name-phone {
+      font-size: var(--text-sm);
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .addr-card-simple .name-phone .name { margin-right: 12px; }
+    .addr-card-simple .detail {
+      color: var(--text-tertiary);
+      font-size: var(--text-xs);
+    }
+
+    /* 商品清单 */
+    .order-table {
+      width: 100%;
+      font-size: var(--text-sm);
+    }
+    .order-table th {
+      background: #FAFAFA;
+      padding: var(--space-3);
+      text-align: left;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    .order-table td {
+      padding: var(--space-3);
+      border-bottom: 1px solid var(--border-light);
+      vertical-align: middle;
+    }
+    .order-table .prod {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .order-table .prod .ph {
+      width: 60px; height: 60px; flex-shrink: 0;
+    }
+    .order-table .prod .ph .emoji { font-size: 24px; margin-bottom: 0; }
+    .order-table .prod .ph .label { display: none; }
+    .order-table .prod .pname {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    .order-table .prod .spec {
+      color: var(--text-tertiary);
+      font-size: var(--text-xs);
+      margin-top: 2px;
+    }
+
+    /* 优惠券 */
+    .coupon-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .coupon-row:last-child { border-bottom: none; }
+    .coupon-row .label {
+      width: 80px;
+      color: var(--text-secondary);
+    }
+    .coupon-row .value {
+      flex: 1;
+      color: var(--text-primary);
+    }
+    .coupon-row .action {
+      color: var(--primary);
+      cursor: pointer;
+    }
+    .coupon-tag {
+      display: inline-block;
+      background: var(--primary-bg);
+      color: var(--primary);
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
+      font-size: var(--text-sm);
+    }
+    .coupon-tag .del {
+      margin-left: 6px;
+      cursor: pointer;
+      color: var(--text-tertiary);
+    }
+
+    /* 价格明细 */
+    .price-summary {
+      padding: var(--space-4) 0;
+      border-top: 1px solid var(--border-light);
+    }
+    .price-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: baseline;
+      gap: var(--space-3);
+      padding: 6px 0;
+      font-size: var(--text-sm);
+    }
+    .price-row .lbl { color: var(--text-secondary); min-width: 100px; text-align: right; }
+    .price-row .val { color: var(--text-primary); min-width: 120px; text-align: right; }
+    .price-row.discount .val { color: var(--success); }
+    .price-row.total {
+      border-top: 1px solid var(--border-light);
+      padding-top: var(--space-3);
+      margin-top: var(--space-2);
+    }
+    .price-row.total .lbl {
+      font-size: var(--text-md);
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    .price-row.total .val {
+      font-size: 28px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    /* 支付方式 */
+    .pay-options {
+      display: flex;
+      gap: var(--space-3);
+      padding: var(--space-3) 0;
+    }
+    .pay-option {
+      flex: 1;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-3) var(--space-4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      transition: all 0.2s;
+    }
+    .pay-option:hover { border-color: var(--primary-light); }
+    .pay-option.active {
+      border-color: var(--primary);
+      background: var(--primary-bg);
+    }
+    .pay-option input { accent-color: var(--primary); }
+    .pay-option .icon { font-size: 24px; }
+    .pay-option .name { font-weight: 500; }
+    .pay-option .desc { color: var(--text-tertiary); font-size: var(--text-xs); margin-top: 2px; }
+
+    /* 提交订单 */
+    .submit-bar {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: var(--space-4) var(--space-5);
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      position: sticky;
+      bottom: 16px;
+      z-index: 10;
+    }
+    .submit-bar .info { flex: 1; }
+    .submit-bar .info .total {
+      font-size: var(--text-md);
+    }
+    .submit-bar .info .total .amount {
+      color: var(--primary);
+      font-size: 28px;
+      font-weight: 700;
+      margin-left: 8px;
+    }
+    .submit-bar .info .addr {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    /* 订单备注 */
+    .order-meta {
+      margin-top: var(--space-3);
+      padding: var(--space-3);
+      background: #FAFAFA;
+      border-radius: var(--radius-sm);
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+      line-height: 1.7;
+    }
+    .order-meta code {
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+      background: #fff;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================== 顶部用户条 ============================== -->
+<div class="top-bar">
+  <div class="container">
+    <div>👋 欢迎来到麦乐迪零食！</div>
+    <div>
+      <a href="user-center.html">我的订单</a> ·
+      <a href="user-center.html">用户中心</a> ·
+      <a href="#">商家入驻</a> ·
+      <a href="#">客户服务</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== 主导航 ============================== -->
+<header class="main-header">
+  <div class="container">
+    <a href="home.html" class="logo">
+      <span class="logo-icon">🥨</span>
+      <span>麦乐迪零食</span>
+    </a>
+
+    <div style="display:flex; align-items:center; gap:32px; flex:1;">
+      <div class="search-box">
+        <input type="text" placeholder="搜索零食、品牌、场景..." value="">
+        <button>🔍 搜索</button>
+      </div>
+      <div class="header-nav">
+        <a href="user-center.html">登录 / 注册</a>
+        <a href="cart.html" style="position:relative;">
+          <span class="cart-icon">🛒<span class="badge">3</span></span>
+          <span style="margin-left:6px;">购物车</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============================== 主体 ============================== -->
+<main class="container">
+
+  <div class="fn-tag">📍 F-U-040 提交订单 · F-U-041 收货地址 · F-U-042 商品确认 · F-U-043 优惠券 · F-U-044 运费计算 · F-U-045 支付方式</div>
+
+  <!-- 面包屑 -->
+  <div class="breadcrumb">
+    <a href="home.html">首页</a>
+    <span class="sep">/</span>
+    <a href="cart.html">购物车</a>
+    <span class="sep">/</span>
+    <span class="current">确认订单</span>
+  </div>
+
+  <!-- 步骤条 -->
+  <div class="steps">
+    <div class="step done">
+      <span class="num">✓</span>
+      <span class="label">我的购物车</span>
+    </div>
+    <div class="arrow done"></div>
+    <div class="step active">
+      <span class="num">2</span>
+      <span class="label">确认订单</span>
+    </div>
+    <div class="arrow"></div>
+    <div class="step">
+      <span class="num">3</span>
+      <span class="label">支付</span>
+    </div>
+    <div class="arrow"></div>
+    <div class="step">
+      <span class="num">4</span>
+      <span class="label">完成</span>
+    </div>
+  </div>
+
+  <!-- 收货地址 -->
+  <div class="section">
+    <h2>
+      <span>📍 收货地址</span>
+      <span class="actions">
+        <a>＋ 新增收货地址</a>
+        <a>管理地址</a>
+      </span>
+    </h2>
+
+    <div class="addr-card">
+      <div class="info">
+        <div class="name-phone">
+          <span class="name">张小明</span>
+          <span>138 **** 5688</span>
+          <span class="tag">默认</span>
+          <span class="tag" style="background:var(--info);">家</span>
+        </div>
+        <div class="detail">广东省 深圳市 南山区 科技园南区 科苑南路 88 号 1 栋 18 楼 1801 室</div>
+      </div>
+      <button class="btn btn-default">更换</button>
+    </div>
+
+    <div class="addr-card-simple">
+      <div class="info">
+        <div class="name-phone">
+          <span class="name">张小明</span>
+          <span>139 **** 1234</span>
+          <span class="tag tag-default" style="background:#E6F4FF; color:#1890FF; font-size:11px; padding:1px 6px; border-radius:4px; margin-left:6px;">公司</span>
+        </div>
+        <div class="detail">广东省 深圳市 福田区 福田街道 中心四路 嘉里中心 12 楼 1203 室</div>
+      </div>
+      <button class="btn btn-text">使用此地址</button>
+    </div>
+
+    <div class="addr-card-simple">
+      <div class="info">
+        <div class="name-phone">
+          <span class="name">张小明</span>
+          <span>137 **** 9876</span>
+          <span class="tag tag-default" style="background:#FFF7E6; color:#FAAD14; font-size:11px; padding:1px 6px; border-radius:4px; margin-left:6px;">学校</span>
+        </div>
+        <div class="detail">广东省 深圳市 南山区 丽山路 深圳大学 南校区 桂园 7 栋 502 室</div>
+      </div>
+      <button class="btn btn-text">使用此地址</button>
+    </div>
+  </div>
+
+  <!-- 商品清单 -->
+  <div class="section">
+    <h2>📦 商品清单（3 件）</h2>
+    <table class="order-table">
+      <thead>
+        <tr>
+          <th>商品</th>
+          <th style="width:120px;">单价</th>
+          <th style="width:100px;">数量</th>
+          <th style="width:140px;">小计</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="prod">
+              <div class="placeholder-img color-2 ph"><span class="emoji">🍟</span></div>
+              <div>
+                <div class="pname">乐事薯片 原味 经典装 75g</div>
+                <div class="spec">规格：原味 / 经典 10 包</div>
+              </div>
+            </div>
+          </td>
+          <td>¥8.9</td>
+          <td>× 2</td>
+          <td style="color:var(--primary); font-weight:600;">¥17.8</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="prod">
+              <div class="placeholder-img color-3 ph"><span class="emoji">🥜</span></div>
+              <div>
+                <div class="pname">每日坚果 30 包混合装 营养代餐</div>
+                <div class="spec">规格：30 包 / 礼盒装</div>
+              </div>
+            </div>
+          </td>
+          <td>¥99.9</td>
+          <td>× 1</td>
+          <td style="color:var(--primary); font-weight:600;">¥99.9</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="prod">
+              <div class="placeholder-img color-5 ph"><span class="emoji">🌶️</span></div>
+              <div>
+                <div class="pname">麻辣王子辣条 26g × 30 包</div>
+                <div class="spec">规格：微辣 / 30 包整箱</div>
+              </div>
+            </div>
+          </td>
+          <td>¥22.9</td>
+          <td>× 1</td>
+          <td style="color:var(--primary); font-weight:600;">¥22.9</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 优惠 / 配送 / 备注 -->
+  <div class="section">
+    <h2>🎫 优惠与配送</h2>
+
+    <div class="coupon-row">
+      <span class="label">优惠券</span>
+      <span class="value">
+        <span class="coupon-tag">满 100 减 10 <span class="del">×</span></span>
+      </span>
+      <span class="action">可用 3 张 ▾</span>
+    </div>
+
+    <div class="coupon-row">
+      <span class="label">配送方式</span>
+      <span class="value">普通快递 · 预计 7-15 到达</span>
+      <span class="action">更换 ▾</span>
+    </div>
+
+    <div class="coupon-row">
+      <span class="label">订单备注</span>
+      <span class="value text-tertiary">选填，请勿超过 50 字</span>
+      <span class="action">填写 ▾</span>
+    </div>
+  </div>
+
+  <!-- 支付方式 -->
+  <div class="section">
+    <h2>💳 支付方式</h2>
+    <div class="pay-options">
+      <label class="pay-option active">
+        <input type="radio" name="pay" checked>
+        <span class="icon">💰</span>
+        <div>
+          <div class="name">虚拟钱包余额支付</div>
+          <div class="desc">当前余额：<strong style="color:var(--primary);">¥1,000.00</strong></div>
+        </div>
+      </label>
+      <label class="pay-option">
+        <input type="radio" name="pay">
+        <span class="icon">💚</span>
+        <div>
+          <div class="name">微信支付</div>
+          <div class="desc">推荐有微信账户的用户使用</div>
+        </div>
+      </label>
+      <label class="pay-option">
+        <input type="radio" name="pay">
+        <span class="icon">💙</span>
+        <div>
+          <div class="name">支付宝</div>
+          <div class="desc">推荐有支付宝账户的用户使用</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- 价格明细 -->
+  <div class="section">
+    <h2>🧾 费用明细</h2>
+    <div class="price-summary">
+      <div class="price-row">
+        <span class="lbl">商品总额</span>
+        <span class="val">¥140.60</span>
+      </div>
+      <div class="price-row discount">
+        <span class="lbl">优惠金额</span>
+        <span class="val">- ¥10.00</span>
+      </div>
+      <div class="price-row">
+        <span class="lbl">运费</span>
+        <span class="val" style="color:var(--success);">¥0.00（满 99 包邮）</span>
+      </div>
+      <div class="price-row total">
+        <span class="lbl">实付金额</span>
+        <span class="val">¥130.60</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提交订单 -->
+  <div class="submit-bar">
+    <div class="info">
+      <div class="total">
+        实付：<span class="amount">¥130.60</span>
+      </div>
+      <div class="addr">📍 配送至：广东省 深圳市 南山区 科技园南区 ... 1801 室</div>
+    </div>
+    <button class="btn btn-default btn-lg">返回购物车</button>
+    <button class="btn btn-primary btn-lg">提交订单 →</button>
+  </div>
+
+  <div class="order-meta">
+    💡 订单提交示例编号：<code>ORD20260715-00012345</code>　·　时间戳：<code>2026-07-15 14:23:08</code>　·　订单将在 30 分钟内未支付自动取消
+  </div>
+
+</main>
+
+<!-- ============================== Footer ============================== -->
+<footer class="footer">
+  <div class="container">
+    <div>
+      <h4>🥨 麦乐迪零食</h4>
+      <p style="opacity:0.7; line-height:1.8; margin-top:8px;">让零食购物像逛便利店一样简单</p>
+      <p style="opacity:0.5; margin-top:12px; font-size:12px;">© 2026 Maledi Snack · 毕业设计演示项目</p>
+    </div>
+    <div>
+      <h4>购物指南</h4>
+      <ul>
+        <li><a>购物流程</a></li>
+        <li><a>常见问题</a></li>
+        <li><a>联系客服</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>配送与支付</h4>
+      <ul>
+        <li><a>配送方式</a></li>
+        <li><a>支付方式</a></li>
+        <li><a>发票信息</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>会员中心</h4>
+      <ul>
+        <li><a>成长值规则</a></li>
+        <li><a>优惠券说明</a></li>
+        <li><a>积分商城</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>关于我们</h4>
+      <ul>
+        <li><a>公司简介</a></li>
+        <li><a>团队介绍</a></li>
+        <li><a>加入我们</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

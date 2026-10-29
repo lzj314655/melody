@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>购物车 - 麦乐迪零食</title>
+  <link rel="stylesheet" href="styles/common.css">
+  <style>
+    .fn-tag {
+      background: #FAFAFA;
+      color: var(--text-tertiary);
+      font-size: var(--text-xs);
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--space-4);
+      display: inline-block;
+    }
+
+    .cart-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: var(--space-5);
+      margin-top: var(--space-3);
+    }
+
+    .cart-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+    }
+    .cart-title-row h1 {
+      font-size: var(--text-2xl);
+      font-weight: 700;
+    }
+    .cart-title-row h1 .count {
+      color: var(--text-tertiary);
+      font-size: var(--text-md);
+      font-weight: 400;
+      margin-left: 6px;
+    }
+
+    /* 购物车表头 */
+    .cart-header {
+      display: grid;
+      grid-template-columns: 40px 1fr 120px 160px 140px 60px;
+      gap: var(--space-3);
+      background: #FAFAFA;
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* 购物车行 */
+    .cart-row {
+      display: grid;
+      grid-template-columns: 40px 1fr 120px 160px 140px 60px;
+      gap: var(--space-3);
+      align-items: center;
+      background: var(--bg-card);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius);
+      margin-top: var(--space-2);
+    }
+    .cart-row .prod {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .cart-row .prod .ph {
+      width: 80px;
+      height: 80px;
+      flex-shrink: 0;
+    }
+    .cart-row .prod .ph .emoji { font-size: 32px; margin-bottom: 0; }
+    .cart-row .prod .ph .label { display: none; }
+    .cart-row .prod .pname {
+      font-size: var(--text-sm);
+      color: var(--text-primary);
+      font-weight: 500;
+      line-height: 1.4;
+    }
+    .cart-row .prod .spec {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+    .cart-row .price { color: var(--text-primary); font-weight: 500; }
+    .cart-row .subtotal { color: var(--primary); font-weight: 700; font-size: var(--text-md); }
+    .cart-row .del {
+      color: var(--text-tertiary);
+      font-size: var(--text-sm);
+      cursor: pointer;
+    }
+    .cart-row .del:hover { color: var(--error); }
+
+    /* 数量加减 */
+    .qty {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      height: 32px;
+    }
+    .qty button {
+      width: 28px;
+      height: 30px;
+      background: #FAFAFA;
+      color: var(--text-secondary);
+      font-size: var(--text-md);
+    }
+    .qty button:hover { background: var(--primary-bg); color: var(--primary); }
+    .qty input {
+      width: 50px;
+      height: 30px;
+      text-align: center;
+      border: none;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    /* checkbox 简化样式 */
+    .ck {
+      width: 18px; height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    /* 失效商品区 */
+    .invalid-section {
+      margin-top: var(--space-6);
+    }
+    .invalid-section h3 {
+      font-size: var(--text-base);
+      color: var(--text-tertiary);
+      margin-bottom: var(--space-3);
+      font-weight: 500;
+    }
+    .invalid-row {
+      display: grid;
+      grid-template-columns: 40px 1fr 120px 160px 140px 60px;
+      gap: var(--space-3);
+      align-items: center;
+      background: #FAFAFA;
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius);
+      opacity: 0.6;
+    }
+    .invalid-row .ph {
+      width: 80px; height: 80px;
+    }
+    .invalid-row .ph .emoji { font-size: 32px; margin-bottom: 0; }
+    .invalid-row .ph .label { display: none; }
+    .invalid-row .invalid-tag {
+      display: inline-block;
+      background: var(--bg);
+      color: var(--text-tertiary);
+      font-size: var(--text-xs);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      margin-left: 6px;
+    }
+    .del-text { color: var(--info); font-size: var(--text-sm); cursor: pointer; }
+
+    /* 底部结算栏 */
+    .cart-footer {
+      position: sticky;
+      bottom: 0;
+      margin-top: var(--space-5);
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+      padding: var(--space-3) var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-5);
+    }
+    .cart-footer .total-info {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-2);
+      margin-left: auto;
+      font-size: var(--text-md);
+    }
+    .cart-footer .total-info .amount {
+      color: var(--primary);
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .cart-footer .summary-info {
+      color: var(--text-secondary);
+      font-size: var(--text-sm);
+    }
+
+    /* 推荐搭配 */
+    .recommend-side {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-4);
+      align-self: start;
+    }
+    .recommend-side h3 {
+      font-size: var(--text-md);
+      font-weight: 700;
+      margin-bottom: var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .recommend-side .item {
+      display: flex;
+      gap: var(--space-2);
+      padding: var(--space-2) 0;
+      border-bottom: 1px dashed var(--border-light);
+      cursor: pointer;
+    }
+    .recommend-side .item:last-child { border-bottom: none; }
+    .recommend-side .item .ph {
+      width: 60px; height: 60px; flex-shrink: 0;
+    }
+    .recommend-side .item .ph .emoji { font-size: 24px; margin-bottom: 0; }
+    .recommend-side .item .ph .label { display: none; }
+    .recommend-side .item .meta { flex: 1; min-width: 0; }
+    .recommend-side .item .name {
+      font-size: var(--text-sm);
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .recommend-side .item .price {
+      color: var(--primary);
+      font-weight: 700;
+      font-size: var(--text-sm);
+      margin-top: 4px;
+    }
+    .recommend-side .item .add {
+      align-self: center;
+      color: var(--primary);
+      cursor: pointer;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================== 顶部用户条 ============================== -->
+<div class="top-bar">
+  <div class="container">
+    <div>👋 欢迎来到麦乐迪零食！</div>
+    <div>
+      <a href="user-center.html">我的订单</a> ·
+      <a href="user-center.html">用户中心</a> ·
+      <a href="#">商家入驻</a> ·
+      <a href="#">客户服务</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== 主导航 ============================== -->
+<header class="main-header">
+  <div class="container">
+    <a href="home.html" class="logo">
+      <span class="logo-icon">🥨</span>
+      <span>麦乐迪零食</span>
+    </a>
+
+    <div style="display:flex; align-items:center; gap:32px; flex:1;">
+      <div class="search-box">
+        <input type="text" placeholder="搜索零食、品牌、场景..." value="">
+        <button>🔍 搜索</button>
+      </div>
+      <div class="header-nav">
+        <a href="user-center.html">登录 / 注册</a>
+        <a href="cart.html" style="position:relative;">
+          <span class="cart-icon">🛒<span class="badge">3</span></span>
+          <span style="margin-left:6px;">购物车</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============================== 主体 ============================== -->
+<main class="container">
+
+  <div class="fn-tag">📍 F-U-030 加入购物车 · F-U-031 查看购物车 · F-U-032 修改数量 · F-U-033 删除商品 · F-U-035 失效商品处理 · F-U-036 结算</div>
+
+  <!-- 面包屑 -->
+  <div class="breadcrumb">
+    <a href="home.html">首页</a>
+    <span class="sep">/</span>
+    <span class="current">购物车</span>
+  </div>
+
+  <div class="cart-title-row">
+    <h1>🛒 我的购物车 <span class="count">(共 3 件商品)</span></h1>
+    <button class="btn btn-default">管理收货地址</button>
+  </div>
+
+  <div class="cart-layout">
+    <!-- 左侧购物车主区 -->
+    <div>
+      <!-- 表头 -->
+      <div class="cart-header">
+        <div><input type="checkbox" class="ck" checked></div>
+        <div>商品信息</div>
+        <div>单价</div>
+        <div>数量</div>
+        <div>小计</div>
+        <div>操作</div>
+      </div>
+
+      <!-- 商品行 1 -->
+      <div class="cart-row">
+        <div><input type="checkbox" class="ck" checked></div>
+        <div class="prod">
+          <div class="placeholder-img color-2 ph"><span class="emoji">🍟</span></div>
+          <div>
+            <div class="pname">乐事薯片 原味 经典装 75g</div>
+            <div class="spec">规格：原味 / 经典 10 包</div>
+          </div>
+        </div>
+        <div class="price">¥8.9</div>
+        <div>
+          <div class="qty">
+            <button>−</button>
+            <input type="text" value="2">
+            <button>+</button>
+          </div>
+        </div>
+        <div class="subtotal">¥17.8</div>
+        <div class="del">删除</div>
+      </div>
+
+      <!-- 商品行 2 -->
+      <div class="cart-row">
+        <div><input type="checkbox" class="ck" checked></div>
+        <div class="prod">
+          <div class="placeholder-img color-3 ph"><span class="emoji">🥜</span></div>
+          <div>
+            <div class="pname">每日坚果 30 包混合装 营养代餐</div>
+            <div class="spec">规格：30 包 / 礼盒装</div>
+          </div>
+        </div>
+        <div class="price">¥99.9</div>
+        <div>
+          <div class="qty">
+            <button>−</button>
+            <input type="text" value="1">
+            <button>+</button>
+          </div>
+        </div>
+        <div class="subtotal">¥99.9</div>
+        <div class="del">删除</div>
+      </div>
+
+      <!-- 商品行 3 -->
+      <div class="cart-row">
+        <div><input type="checkbox" class="ck" checked></div>
+        <div class="prod">
+          <div class="placeholder-img color-5 ph"><span class="emoji">🌶️</span></div>
+          <div>
+            <div class="pname">麻辣王子辣条 26g × 30 包 童年回忆</div>
+            <div class="spec">规格：微辣 / 30 包整箱</div>
+          </div>
+        </div>
+        <div class="price">¥22.9</div>
+        <div>
+          <div class="qty">
+            <button>−</button>
+            <input type="text" value="1">
+            <button>+</button>
+          </div>
+        </div>
+        <div class="subtotal">¥22.9</div>
+        <div class="del">删除</div>
+      </div>
+
+      <!-- 失效商品区 -->
+      <div class="invalid-section">
+        <h3>⚠️ 以下商品已下架或库存不足，暂时无法结算</h3>
+
+        <div class="invalid-row">
+          <div><input type="checkbox" class="ck" disabled></div>
+          <div class="prod">
+            <div class="placeholder-img ph"><span class="emoji">🍫</span></div>
+            <div>
+              <div class="pname">欧式松露巧克力 16 颗 礼盒装 <span class="invalid-tag">已下架</span></div>
+              <div class="spec">规格：16 颗装 / 黑色经典</div>
+            </div>
+          </div>
+          <div class="price text-tertiary"><del>¥68.0</del></div>
+          <div class="text-tertiary">—</div>
+          <div class="text-tertiary">—</div>
+          <div class="del-text">移入收藏</div>
+        </div>
+      </div>
+
+      <!-- 底部固定结算栏 -->
+      <div class="cart-footer">
+        <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+          <input type="checkbox" class="ck" checked> 全选
+        </label>
+        <span class="text-secondary" style="font-size:13px;">已选 <strong style="color:var(--primary);">3</strong> 件</span>
+        <div class="total-info">
+          <span>合计：</span>
+          <span class="amount">¥140.60</span>
+        </div>
+        <button class="btn btn-default">继续购物</button>
+        <button class="btn btn-primary btn-lg">去结算 →</button>
+      </div>
+    </div>
+
+    <!-- 右侧推荐搭配 -->
+    <aside class="recommend-side">
+      <h3>🎁 看了又看</h3>
+
+      <div class="item">
+        <div class="placeholder-img color-4 ph"><span class="emoji">🥤</span></div>
+        <div class="meta">
+          <div class="name">白桃味气泡水 330ml × 12</div>
+          <div class="price">¥49.9</div>
+        </div>
+        <span class="add">+</span>
+      </div>
+
+      <div class="item">
+        <div class="placeholder-img color-7 ph"><span class="emoji">🌶️</span></div>
+        <div class="meta">
+          <div class="name">辣条大礼包 8 种口味</div>
+          <div class="price">¥29.9</div>
+        </div>
+        <span class="add">+</span>
+      </div>
+
+      <div class="item">
+        <div class="placeholder-img color-6 ph"><span class="emoji">🍪</span></div>
+        <div class="meta">
+          <div class="name">丹麦曲奇礼盒 312g</div>
+          <div class="price">¥39.9</div>
+        </div>
+        <span class="add">+</span>
+      </div>
+
+      <div class="item">
+        <div class="placeholder-img color-8 ph"><span class="emoji">🍿</span></div>
+        <div class="meta">
+          <div class="name">焦糖爆米花 桶装 100g</div>
+          <div class="price">¥8.8</div>
+        </div>
+        <span class="add">+</span>
+      </div>
+
+      <div style="margin-top:12px; padding:12px; background:var(--primary-bg); border-radius:8px; font-size:12px; color:var(--primary); line-height:1.6;">
+        💡 再买 <strong>¥58.4</strong> 即可享<br>满 199 减 30 优惠
+      </div>
+    </aside>
+  </div>
+
+</main>
+
+<!-- ============================== Footer ============================== -->
+<footer class="footer">
+  <div class="container">
+    <div>
+      <h4>🥨 麦乐迪零食</h4>
+      <p style="opacity:0.7; line-height:1.8; margin-top:8px;">让零食购物像逛便利店一样简单</p>
+      <p style="opacity:0.5; margin-top:12px; font-size:12px;">© 2026 Maledi Snack · 毕业设计演示项目</p>
+    </div>
+    <div>
+      <h4>购物指南</h4>
+      <ul>
+        <li><a>购物流程</a></li>
+        <li><a>常见问题</a></li>
+        <li><a>联系客服</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>配送与支付</h4>
+      <ul>
+        <li><a>配送方式</a></li>
+        <li><a>支付方式</a></li>
+        <li><a>发票信息</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>会员中心</h4>
+      <ul>
+        <li><a>成长值规则</a></li>
+        <li><a>优惠券说明</a></li>
+        <li><a>积分商城</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>关于我们</h4>
+      <ul>
+        <li><a>公司简介</a></li>
+        <li><a>团队介绍</a></li>
+        <li><a>加入我们</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "Melody Savory System",
+  "description": "麦乐迪零食商场 (Melody Savory System) - A gourmet snack store and admin management platform with Digital Gourmet Efficiency.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

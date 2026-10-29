@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>系统主要实体 E-R 图</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --ink:#000000;
+    --bd:#111111;
+    --soft:#f4f4f4;
+    --line:#333333;
+    --muted:#555555;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);
+    font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--ink)}
+  .wrap{padding:12px;overflow:auto}
+  .canvas{position:relative;width:1700px;height:1240px;margin:0 auto}
+
+  /* SVG 关系线层 */
+  .lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+  .lines text{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:11px;fill:#000;font-weight:700}
+
+  /* 域背景 */
+  .domain{position:absolute;border:1.5px dashed #888;background:var(--soft);z-index:0}
+  .domain-title{position:absolute;font-size:13px;font-weight:700;letter-spacing:2px;color:#000;
+    background:var(--bg);padding:2px 8px;border:1px solid #888;border-radius:3px;z-index:0}
+
+  /* 实体盒 */
+  .entity{position:absolute;width:210px;background:var(--bg);border:1.5px solid var(--bd);z-index:2;
+    box-shadow:2px 2px 0 rgba(0,0,0,.05)}
+  .entity .title{font-size:13px;font-weight:700;background:#111;color:#fff;padding:5px 8px;
+    letter-spacing:.5px;display:flex;justify-content:space-between;align-items:center}
+  .entity .title .lk{font-weight:500;font-size:11px;color:#ccc}
+  .entity .body{padding:5px 8px;font-size:12px;line-height:1.55}
+  .entity .row{display:flex;justify-content:space-between;gap:6px}
+  .entity .row .k{flex:1;color:#000}
+  .entity .row .t{color:var(--muted);font-size:11px}
+  .pk{font-weight:700}
+  .fk{font-style:italic}
+
+  /* 卡片关系标记 */
+  .badge{
+    position:absolute;background:var(--bg);border:1px solid var(--line);
+    border-radius:2px;padding:0 4px;font-size:11px;font-weight:700;color:#000;z-index:3;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="canvas">
+
+  <!-- SVG 关系线层 -->
+  <svg class="lines" viewBox="0 0 1700 1240" preserveAspectRatio="xMinYMin meet">
+
+    <!-- ===== 用户域 (内) ===== -->
+    <!-- t_user -- t_user_address : 1:N -->
+    <path d="M270 130 L380 130" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)"/>
+    <!-- t_user -- t_wallet_account : 1:1 -->
+    <path d="M170 230 L170 258" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#one)"/>
+    <!-- t_user -- t_wallet_log : 1:N -->
+    <path d="M270 220 L380 220" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)"/>
+    <!-- t_user -- t_point_log : 1:N -->
+    <path d="M170 248 L170 388" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)"/>
+    <!-- t_user -- t_growth_log : 1:N -->
+    <path d="M270 230 L380 388" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)" stroke-dasharray="3 3"/>
+
+    <!-- ===== 商品域 ===== -->
+    <!-- t_category --(self) parent : 1:N -->
+    <path d="M380 720 L380 670" stroke="#000" stroke-width="1" fill="none" marker-end="url(#many)" stroke-dasharray="2 3"/>
+    <!-- t_category -- t_product : 1:N -->
+    <path d="M380 800 L600 800" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)"/>
+    <!-- t_product -- t_product_sku : 1:N -->
+    <path d="M810 870 L980 870" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)"/>
+    <!-- t_product -- t_product_image : 1:N -->
+    <path d="M810 900 L980 960" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)"/>
+    <!-- t_product -- t_product_review : 1:N -->
+    <path d="M600 890 L600 1010" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)"/>
+    <!-- t_user -- t_product_review : 1:N -->
+    <path d="M170 240 L390 1100" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)" stroke-dasharray="3 3"/>
+    <!-- t_user -- t_favorite : 1:N -->
+    <path d="M170 250 L980 1110" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)" stroke-dasharray="3 3"/>
+
+    <!-- ===== 交易/营销域 ===== -->
+    <!-- t_user -- t_cart_item : 1:N -->
+    <path d="M200 256 L1170 470" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)" stroke-dasharray="3 3"/>
+    <!-- t_cart_item -- t_product : N:1 -->
+    <path d="M1170 470 L850 870" stroke="#000" stroke-width="1.2" fill="none" marker-end="url(#one)" stroke-dasharray="3 3"/>
+    <!-- t_user -- t_order : 1:N -->
+    <path d="M270 260 L1410 200" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)" stroke-dasharray="3 3"/>
+    <!-- t_order -- t_order_item : 1:N -->
+    <path d="M1500 220 L1500 290" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)"/>
+    <!-- t_order_item -- t_product : N:1 -->
+    <path d="M1430 340 L840 900" stroke="#000" stroke-width="1.2" fill="none" marker-end="url(#one)" stroke-dasharray="3 3"/>
+    <!-- t_order -- t_coupon : N:1 -->
+    <path d="M1410 260 L1230 540" stroke="#000" stroke-width="1.2" fill="none" marker-end="url(#one)" stroke-dasharray="3 3"/>
+    <!-- t_coupon -- t_user_coupon : 1:N -->
+    <path d="M1310 580 L1410 580" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)"/>
+    <!-- t_user -- t_user_coupon : 1:N -->
+    <path d="M270 270 L1390 620" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)" stroke-dasharray="3 3"/>
+
+    <!-- ===== 推荐域 ===== -->
+    <!-- user_behavior_log -- t_user : N:1 -->
+    <path d="M170 280 L730 1160" stroke="#000" stroke-width="1.2" fill="none" marker-end="url(#one)" stroke-dasharray="3 3"/>
+    <!-- user_behavior_log -- t_product : N:1 -->
+    <path d="M810 920 L840 1160" stroke="#000" stroke-width="1.2" fill="none" marker-end="url(#one)" stroke-dasharray="3 3"/>
+
+    <!-- ===== 后台 RBAC ===== -->
+    <!-- t_admin -- t_admin_role : 1:N (N:M via) -->
+    <path d="M290 1218 L1410 1040" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)" stroke-dasharray="3 3"/>
+    <!-- t_role -- t_admin_role : 1:N -->
+    <path d="M1430 1110 L1500 1075" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)"/>
+    <!-- t_role -- t_role_permission : 1:N -->
+    <path d="M1510 1110 L1500 1175" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)"/>
+    <!-- t_permission -- t_role_permission : 1:N -->
+    <path d="M1290 1180 L1500 1180" stroke="#000" stroke-width="1.2" fill="none" marker-start="url(#one)" marker-end="url(#many)"/>
+
+    <!-- Markers -->
+    <defs>
+      <marker id="one" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto">
+        <path d="M0 0 L10 0 L10 10 L0 10 z" fill="none" stroke="#000" stroke-width="1.2"/>
+      </marker>
+      <marker id="many" viewBox="0 0 14 14" refX="13" refY="7" markerWidth="14" markerHeight="14" orient="auto">
+        <path d="M2 1 L13 7 L2 13" fill="none" stroke="#000" stroke-width="1.2"/>
+      </marker>
+    </defs>
+  </svg>
+
+  <!-- ===== 域背景 ===== -->
+  <div class="domain" style="left:30px;top:70px;width:480px;height:380px">
+    <div class="domain-title" style="left:40px;top:60px">用户域</div>
+  </div>
+
+  <div class="domain" style="left:30px;top:480px;width:1010px;height:550px">
+    <div class="domain-title" style="left:40px;top:470px">商品域</div>
+  </div>
+
+  <div class="domain" style="left:1080px;top:70px;width:580px;height:680px">
+    <div class="domain-title" style="left:1090px;top:60px">交易 / 营销域</div>
+  </div>
+
+  <div class="domain" style="left:30px;top:1060px;width:1620px;height:170px">
+    <div class="domain-title" style="left:40px;top:1050px">后台 · 推荐 · 内容 / 运维</div>
+  </div>
+
+  <!-- ===== 实体盒 ===== -->
+
+  <!-- 用户域 -->
+  <div class="entity" style="left:60px;top:90px;width:220px">
+    <div class="title">t_user <span class="lk">用户</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k">phone</span><span class="t">UNIQUE</span></div>
+      <div class="row"><span class="k">email</span></div>
+      <div class="row"><span class="k">username / password</span></div>
+      <div class="row"><span class="k">nickname / avatar</span></div>
+      <div class="row"><span class="k">points / growth_value</span></div>
+      <div class="row"><span class="k">rank_code</span></div>
+      <div class="row"><span class="k">status</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:380px;top:90px">
+    <div class="title">t_user_address <span class="lk">收货地址</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK user_id</span></div>
+      <div class="row"><span class="k">name / phone</span></div>
+      <div class="row"><span class="k">province / city / district</span></div>
+      <div class="row"><span class="k">detail</span></div>
+      <div class="row"><span class="k">tag / is_default</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:60px;top:260px">
+    <div class="title">t_wallet_account <span class="lk">钱包账户</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK user_id</span><span class="t">UNIQUE</span></div>
+      <div class="row"><span class="k">balance / frozen</span></div>
+      <div class="row"><span class="k">password (支付密码)</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:380px;top:260px">
+    <div class="title">t_wallet_log <span class="lk">钱包流水</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK user_id</span></div>
+      <div class="row"><span class="k fk">FK related_order_id</span></div>
+      <div class="row"><span class="k">change_amount / balance_after</span></div>
+      <div class="row"><span class="k">type [RECHARGE/PAY/REFUND]</span></div>
+      <div class="row"><span class="k">operator</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:60px;top:395px">
+    <div class="title">t_point_log <span class="lk">积分流水</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK user_id</span></div>
+      <div class="row"><span class="k fk">FK related_order_id</span></div>
+      <div class="row"><span class="k">change_amount / balance_after</span></div>
+      <div class="row"><span class="k">type [ORDER/REVIEW]</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:380px;top:395px">
+    <div class="title">t_growth_log <span class="lk">成长值流水</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK user_id</span></div>
+      <div class="row"><span class="k fk">FK related_order_id</span></div>
+      <div class="row"><span class="k">change_amount / balance_after</span></div>
+      <div class="row"><span class="k">type [ORDER/REFUND]</span></div>
+    </div>
+  </div>
+
+  <!-- 商品域 -->
+  <div class="entity" style="left:170px;top:550px">
+    <div class="title">t_category <span class="lk">分类</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK parent_id</span><span class="t">自引用</span></div>
+      <div class="row"><span class="k">name</span></div>
+      <div class="row"><span class="k">icon / sort</span></div>
+      <div class="row"><span class="k">status</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:600px;top:680px">
+    <div class="title">t_product <span class="lk">商品</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK category_id</span></div>
+      <div class="row"><span class="k">name / brand</span></div>
+      <div class="row"><span class="k">price / market_price</span></div>
+      <div class="row"><span class="k">cover_image</span></div>
+      <div class="row"><span class="k">inventory / sales</span></div>
+      <div class="row"><span class="k">rating / status</span></div>
+      <div class="row"><span class="k">tags / origin / shelf_life</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:980px;top:780px">
+    <div class="title">t_product_sku <span class="lk">SKU 规格</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK product_id</span></div>
+      <div class="row"><span class="k">spec_name</span></div>
+      <div class="row"><span class="k">sku_code</span></div>
+      <div class="row"><span class="k">price / stock</span></div>
+      <div class="row"><span class="k">sales / status</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:980px;top:960px">
+    <div class="title">t_product_image <span class="lk">商品图片</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK product_id</span></div>
+      <div class="row"><span class="k">url</span></div>
+      <div class="row"><span class="k">sort</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:390px;top:1010px">
+    <div class="title">t_product_review <span class="lk">商品评价</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK product_id</span></div>
+      <div class="row"><span class="k fk">FK user_id</span></div>
+      <div class="row"><span class="k fk">FK order_id</span></div>
+      <div class="row"><span class="k">rating / content</span></div>
+      <div class="row"><span class="k">is_anonymous / is_hidden</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:600px;top:1110px">
+    <div class="title">t_favorite <span class="lk">商品收藏</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK user_id</span></div>
+      <div class="row"><span class="k fk">FK product_id</span></div>
+      <div class="row"><span class="k">created_at</span></div>
+    </div>
+  </div>
+
+  <!-- 交易/营销域 -->
+  <div class="entity" style="left:1170px;top:380px">
+    <div class="title">t_cart_item <span class="lk">购物车</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK user_id</span></div>
+      <div class="row"><span class="k fk">FK product_id</span></div>
+      <div class="row"><span class="k fk">FK sku_id</span></div>
+      <div class="row"><span class="k">quantity / price</span></div>
+      <div class="row"><span class="k">spec_name / selected</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:1410px;top:90px">
+    <div class="title">t_order <span class="lk">订单</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK user_id</span></div>
+      <div class="row"><span class="k fk">FK coupon_id</span></div>
+      <div class="row"><span class="k">order_no</span><span class="t">UNIQUE</span></div>
+      <div class="row"><span class="k">total_price / status</span></div>
+      <div class="row"><span class="k">consignee_* / tracking_no</span></div>
+      <div class="row"><span class="k">refund_reason / paid_at</span></div>
+      <div class="row"><span class="k">alipay_trade_no</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:1410px;top:290px">
+    <div class="title">t_order_item <span class="lk">订单明细</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK order_id</span></div>
+      <div class="row"><span class="k fk">FK product_id</span></div>
+      <div class="row"><span class="k fk">FK sku_id</span></div>
+      <div class="row"><span class="k">product_name / spec_name</span></div>
+      <div class="row"><span class="k">price / quantity / subtotal</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:1170px;top:540px">
+    <div class="title">t_coupon <span class="lk">优惠券</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k">name / type</span></div>
+      <div class="row"><span class="k">discount / min_spend</span></div>
+      <div class="row"><span class="k">total / remaining</span></div>
+      <div class="row"><span class="k">start_date / end_date</span></div>
+      <div class="row"><span class="k">status</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:1410px;top:540px">
+    <div class="title">t_user_coupon <span class="lk">用户持有券</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK user_id</span></div>
+      <div class="row"><span class="k fk">FK coupon_id</span></div>
+      <div class="row"><span class="k fk">FK used_order_id</span></div>
+      <div class="row"><span class="k">status / used_at / expire_at</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:1410px;top:680px">
+    <div class="title">t_promotion <span class="lk">满减活动</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k">name / type</span></div>
+      <div class="row"><span class="k">min_spend / discount</span></div>
+      <div class="row"><span class="k">scope_type / scope_value</span></div>
+      <div class="row"><span class="k">start_date / end_date</span></div>
+    </div>
+  </div>
+
+  <!-- 后台 / 推荐 / 内容 -->
+  <div class="entity" style="left:730px;top:1080px">
+    <div class="title">user_behavior_log <span class="lk">行为日志</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK user_id</span></div>
+      <div class="row"><span class="k fk">FK product_id</span></div>
+      <div class="row"><span class="k">behavior_type</span></div>
+      <div class="row"><span class="k">weight / extra (JSON)</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:170px;top:1080px">
+    <div class="title">t_admin <span class="lk">后台管理员</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k">username</span><span class="t">UNIQUE</span></div>
+      <div class="row"><span class="k">password / email / phone</span></div>
+      <div class="row"><span class="k">display_name / status</span></div>
+      <div class="row"><span class="k">last_login_at / ip</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:170px;top:1170px;width:300px">
+    <div class="title">t_role <span class="lk">角色</span></div>
+    <div class="body" style="display:flex;gap:18px">
+      <div style="flex:1">
+        <div class="row"><span class="k pk">PK id</span></div>
+        <div class="row"><span class="k">code</span><span class="t">UNIQUE</span></div>
+        <div class="row"><span class="k">name</span></div>
+        <div class="row"><span class="k">description / status</span></div>
+      </div>
+      <div style="flex:1;border-left:1px dashed #888;padding-left:10px">
+        <div style="font-weight:700;margin-bottom:3px">t_permission</div>
+        <div class="row"><span class="k pk">PK id</span></div>
+        <div class="row"><span class="k">code</span><span class="t">UNIQUE</span></div>
+        <div class="row"><span class="k">name / module</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:1370px;top:1080px">
+    <div class="title">t_admin_role <span class="lk">管理员-角色</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK admin_id</span></div>
+      <div class="row"><span class="k fk">FK role_id</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:1370px;top:1170px">
+    <div class="title">t_role_permission <span class="lk">角色-权限</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k fk">FK role_id</span></div>
+      <div class="row"><span class="k fk">FK permission_id</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:950px;top:1080px">
+    <div class="title">t_banner <span class="lk">首页轮播图</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k">title / image_url</span></div>
+      <div class="row"><span class="k">link_url / sort</span></div>
+      <div class="row"><span class="k">status / start / end</span></div>
+    </div>
+  </div>
+
+  <div class="entity" style="left:950px;top:1170px">
+    <div class="title">t_announcement <span class="lk">平台公告</span></div>
+    <div class="body">
+      <div class="row"><span class="k pk">PK id</span></div>
+      <div class="row"><span class="k">title / content</span></div>
+      <div class="row"><span class="k">status / is_top</span></div>
+      <div class="row"><span class="k">publish_at / expire_at</span></div>
+    </div>
+  </div>
+
+</div>
+
+<div style="max-width:1700px;margin:18px auto 0;font-size:12px;color:#555;line-height:1.8">
+图例：<b>PK</b> 主键　<i>FK</i> 外键　<b>粗体</b> 必填 / 关键约束　<span style="font-family:monospace">UNIQUE</span> 唯一索引
+关系线：实线 = 直接强依赖，虚线 = 跨域组合关联（多数为 N:1，关联表自引用）。
+共 27 张表，分 6 个域：用户域（6）/ 商品域（5）/ 交易与营销域（6）/ 推荐域（1）/ 后台 RBAC（5）/ 内容与运维（4）。
+</div>
+
+</div>
+</body>
+</html>

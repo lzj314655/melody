@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>系统架构图</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --card:#ffffff;
+    --line:#cccccc;
+    --tag-bg:#e5e5e5;
+    --tag-fg:#111111;
+    --box:#ffffff;
+    --box-bd:#555555;
+    --ink:#000000;
+    --ink-2:#333333;
+    --muted-bg:#f2f2f2;
+    --muted-bd:#bdbdbd;
+    --muted-fg:#555555;
+    --acc:#111111;
+    --arr-bg:#ececec;
+    --arr-tag-bg:#dcdcdc;
+    --shadow:0 1px 0 rgba(0,0,0,.06),0 2px 6px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);
+    font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--ink)}
+  .wrap{max-width:1080px;margin:24px auto;padding:0 16px}
+  .arch{
+    background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  .row{display:grid;grid-template-columns:96px 1fr;border-top:1px dashed var(--line)}
+  .row:first-child{border-top:none}
+  .tag{
+    background:var(--tag-bg);color:var(--tag-fg);font-weight:700;font-size:15px;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    border-right:1px dashed var(--line);padding:8px;
+  }
+  .body{padding:14px 18px;background:var(--card);display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+  .pill{
+    background:var(--box);border:1.5px solid var(--box-bd);color:var(--ink);
+    border-radius:8px;padding:8px 14px;font-size:14px;font-weight:600;
+    box-shadow:var(--shadow);white-space:nowrap;
+  }
+  .pill.acc{background:var(--acc);border-color:var(--acc);color:#fff}
+  .pill.muted{background:var(--muted-bg);border-color:var(--muted-bd);color:var(--muted-fg);font-weight:500}
+  .stack{display:flex;flex-direction:column;gap:6px;background:var(--box);border:1.5px solid var(--box-bd);
+    border-radius:8px;padding:10px 14px;box-shadow:var(--shadow)}
+  .stack .row2{display:flex;gap:6px;flex-wrap:wrap}
+  .stack .row2 .pill{font-size:13px;padding:4px 10px}
+  .stack .lbl{font-size:12px;color:#666;font-weight:600;letter-spacing:.5px;margin-bottom:2px}
+  .split{display:flex;gap:18px;flex-wrap:wrap;width:100%}
+  .split > div{flex:1 1 320px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .arrow-row{display:grid;grid-template-columns:96px 1fr;background:var(--arr-bg);
+    border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}
+  .arrow-row .tag{background:var(--arr-tag-bg);border-right:1px dashed var(--line)}
+  .arrow-row .body{display:flex;align-items:center;gap:14px;padding:10px 18px}
+  .arr-text{color:#1a1a1a;font-weight:700;font-size:13px;letter-spacing:.5px}
+  @media print{
+    body{background:#fff}
+    .arch{box-shadow:none;border-color:#888}
+    .pill{box-shadow:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="arch">
+
+    <!-- 1. 访问层 -->
+    <div class="row">
+      <div class="tag">访问层</div>
+      <div class="body">
+        <div class="split">
+          <div><div class="pill">PC 端浏览器</div></div>
+          <div><div class="pill">第三方服务</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 前端UI -->
+    <div class="row">
+      <div class="tag">前端<br/>UI</div>
+      <div class="body">
+        <div class="split">
+          <div>
+            <div class="stack">
+              <div class="lbl">WEB</div>
+              <div class="row2">
+                <div class="pill">Vue 3</div>
+                <div class="pill">Pinia</div>
+                <div class="pill">Vue Router</div>
+                <div class="pill">Tailwind CSS</div>
+              </div>
+              <div class="row2">
+                <div class="pill">axios</div>
+                <div class="pill">lucide-vue-next</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="stack">
+              <div class="lbl">构建与运行</div>
+              <div class="row2">
+                <div class="pill">Vite 5</div>
+                <div class="pill">npm</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 前端交互 -->
+    <div class="row">
+      <div class="tag">前端<br/>交互</div>
+      <div class="body">
+        <div class="split">
+          <div>
+            <div class="stack">
+              <div class="lbl">API 接口调用</div>
+              <div class="row2">
+                <div class="pill muted">store/*.js</div>
+                <div class="pill muted">api/*.js</div>
+                <div class="pill muted">router/index.js</div>
+              </div>
+              <div class="row2">
+                <div class="pill muted">views/frontend/*</div>
+                <div class="pill muted">views/admin/*</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="stack">
+              <div class="lbl">第三方服务交互</div>
+              <div class="row2">
+                <div class="pill">POST 请求</div>
+                <div class="pill">GET 请求</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Nginx 网关 -->
+    <div class="arrow-row">
+      <div class="tag">网关</div>
+      <div class="body">
+        <div class="pill acc">Nginx 反向代理</div>
+        <span class="arr-text">HTTP RESTful · /api/*</span>
+      </div>
+    </div>
+
+    <!-- 5. 后端服务 -->
+    <div class="row">
+      <div class="tag">后端<br/>服务</div>
+      <div class="body">
+        <div class="split">
+          <div>
+            <div class="stack">
+              <div class="lbl">Java 业务逻辑</div>
+              <div class="row2">
+                <div class="pill">Spring Boot 3</div>
+                <div class="pill">Spring MVC</div>
+              </div>
+              <div class="row2">
+                <div class="pill">Spring Security</div>
+                <div class="pill">Bean Validation</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="stack">
+              <div class="lbl">其他组件</div>
+              <div class="row2">
+                <div class="pill">JWT（jjwt 0.12）</div>
+                <div class="pill">Hutool</div>
+                <div class="pill">Alipay SDK</div>
+              </div>
+              <div class="row2">
+                <div class="pill muted">controller</div>
+                <div class="pill muted">service / impl</div>
+                <div class="pill muted">dto</div>
+                <div class="pill muted">task</div>
+                <div class="pill muted">config</div>
+                <div class="pill muted">exception</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. 数据层 -->
+    <div class="row">
+      <div class="tag">数据层</div>
+      <div class="body">
+        <div class="split">
+          <div>
+            <div class="stack">
+              <div class="lbl">持久化层</div>
+              <div class="row2">
+                <div class="pill">MyBatis-Plus</div>
+                <div class="pill">MySQL JDBC</div>
+              </div>
+              <div class="row2">
+                <div class="pill muted">*Mapper.java</div>
+                <div class="pill muted">entity/*</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="stack">
+              <div class="lbl">数据库</div>
+              <div class="row2">
+                <div class="pill">MySQL 8</div>
+                <div class="pill">Redis</div>
+              </div>
+              <div class="row2">
+                <div class="pill muted">schema.sql</div>
+                <div class="pill muted">data-init.sql</div>
+                <div class="pill muted">migrate-to-local-images.sql</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. 基础服务层 -->
+    <div class="row">
+      <div class="tag">基础<br/>服务层</div>
+      <div class="body">
+        <div class="split">
+          <div>
+            <div class="stack">
+              <div class="lbl">操作系统</div>
+              <div class="row2">
+                <div class="pill">进程 / 线程</div>
+                <div class="pill">内存同步</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="stack">
+              <div class="lbl">DevOps</div>
+              <div class="row2">
+                <div class="pill">Git</div>
+                <div class="pill">Maven</div>
+                <div class="pill">JDK 17</div>
+                <div class="pill">Playwright</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户中心 - 麦乐迪零食</title>
+  <link rel="stylesheet" href="styles/common.css">
+  <style>
+    /* 用户中心布局 */
+    .uc-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: var(--space-5);
+      margin: var(--space-5) 0;
+    }
+
+    /* 左侧用户区 */
+    .uc-sidebar {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      align-self: start;
+    }
+    .user-block {
+      text-align: center;
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: var(--space-4);
+    }
+    .user-block .avatar {
+      width: 64px;
+      height: 64px;
+      font-size: 24px;
+      margin: 0 auto var(--space-3);
+    }
+    .user-block .nickname {
+      font-size: var(--text-md);
+      font-weight: 600;
+      margin-bottom: var(--space-1);
+    }
+    .user-block .vip-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #C0C0C0, #E8E8E8);
+      color: #555;
+      font-size: var(--text-xs);
+      padding: 2px 10px;
+      border-radius: var(--radius-full);
+      font-weight: 500;
+    }
+    .growth-row {
+      margin-top: var(--space-3);
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+    }
+    .growth-bar {
+      height: 6px;
+      background: var(--bg);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: var(--space-1);
+    }
+    .growth-bar .fill {
+      height: 100%;
+      background: var(--primary-gradient);
+      border-radius: 3px;
+    }
+
+    /* 侧栏菜单 */
+    .uc-menu .menu-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-3) var(--space-3);
+      border-radius: var(--radius);
+      font-size: var(--text-base);
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+      transition: all 0.2s;
+    }
+    .uc-menu .menu-item:hover {
+      background: var(--primary-bg);
+      color: var(--primary);
+    }
+    .uc-menu .menu-item.active {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 500;
+    }
+    .uc-menu .menu-item .ico { font-size: 16px; }
+
+    /* 欢迎条 */
+    .welcome-bar {
+      background: linear-gradient(135deg, #FFF1EA 0%, #FFE8DC 100%);
+      border-radius: var(--radius);
+      padding: var(--space-5) var(--space-6);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-4);
+    }
+    .welcome-bar .greet {
+      font-size: var(--text-xl);
+      font-weight: 700;
+    }
+    .welcome-bar .greet .name { color: var(--primary); }
+    .welcome-bar .meta {
+      color: var(--text-secondary);
+      font-size: var(--text-sm);
+      margin-top: var(--space-1);
+    }
+    .welcome-bar .vip {
+      background: var(--bg-card);
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+    .welcome-bar .vip strong { color: var(--accent); }
+
+    /* 统计卡 */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4);
+      margin-bottom: var(--space-5);
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-5);
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .stat-card .icon {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+    .stat-card.s1 .icon { background: var(--primary-bg); }
+    .stat-card.s2 .icon { background: #E6F4FF; }
+    .stat-card.s3 .icon { background: #FFF7E6; }
+    .stat-card.s4 .icon { background: #FFE7E7; }
+    .stat-card .num {
+      font-size: var(--text-3xl);
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.1;
+    }
+    .stat-card .label { color: var(--text-tertiary); font-size: var(--text-sm); margin-top: 2px; }
+
+    /* 区块 */
+    .uc-section {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-5);
+      margin-bottom: var(--space-5);
+      box-shadow: var(--shadow-sm);
+    }
+    .uc-section .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-4);
+    }
+    .uc-section .head h3 {
+      font-size: var(--text-md);
+      font-weight: 600;
+    }
+    .uc-section .head a {
+      font-size: var(--text-sm);
+      color: var(--text-tertiary);
+    }
+    .uc-section .head a:hover { color: var(--primary); }
+
+    /* 资产 */
+    .asset-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4);
+    }
+    .asset-item {
+      text-align: center;
+      padding: var(--space-3);
+      background: var(--bg);
+      border-radius: var(--radius);
+    }
+    .asset-item .v {
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .asset-item .l {
+      font-size: var(--text-sm);
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    /* 订单 */
+    .order-mini {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-3);
+      background: var(--bg);
+      border-radius: var(--radius);
+    }
+    .order-mini .img {
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+    }
+    .order-mini .img .emoji { font-size: 32px; margin-bottom: 0; }
+    .order-mini .img .label { display: none; }
+    .order-mini .info { flex: 1; }
+    .order-mini .name {
+      font-size: var(--text-base);
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .order-mini .meta {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+    }
+    .order-mini .price {
+      font-size: var(--text-md);
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .order-mini .actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      align-items: flex-end;
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部用户条 -->
+  <div class="top-bar">
+    <div class="container">
+      <span>Hi, 张小糯 欢迎来到麦乐迪零食</span>
+      <div>
+        <a href="home.html">首页</a>
+        <a href="#">收藏</a>
+        <a href="#">客户服务</a>
+        <a href="#">网站导航</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主导航 -->
+  <header class="main-header">
+    <div class="container">
+      <a href="home.html" class="logo">
+        <span class="logo-icon">🥨</span>
+        <span>麦乐迪零食</span>
+      </a>
+      <div class="search-box">
+        <input type="text" placeholder="搜索零食、品牌、品类...">
+        <button>搜 索</button>
+      </div>
+      <div class="header-nav">
+        <a href="user-center.html"><span class="avatar avatar-sm" style="background: linear-gradient(135deg,#FF6B35,#FF8C5F);">糯</span> 张小糯</a>
+        <a href="#" class="cart-icon">🛒<span class="badge">3</span></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 面包屑 -->
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="home.html">首页</a>
+      <span class="sep">/</span>
+      <span class="current">用户中心</span>
+    </div>
+  </div>
+
+  <!-- 主体 -->
+  <div class="container">
+    <div class="uc-layout">
+      <!-- 左侧 sidebar -->
+      <aside class="uc-sidebar">
+        <div class="user-block">
+          <span class="avatar">糯</span>
+          <div class="nickname">张小糯</div>
+          <span class="vip-badge">V1 · 银卡会员</span>
+          <div class="growth-row">
+            成长值 680 / 1000
+            <div class="growth-bar"><div class="fill" style="width:68%"></div></div>
+          </div>
+        </div>
+        <nav class="uc-menu">
+          <a href="user-center.html" class="menu-item active"><span class="ico">🏠</span>用户中心</a>
+          <a href="my-orders.html" class="menu-item"><span class="ico">📦</span>我的订单</a>
+          <a href="favorites.html" class="menu-item"><span class="ico">❤️</span>我的收藏</a>
+          <a href="address.html" class="menu-item"><span class="ico">📍</span>收货地址</a>
+          <a href="coupons.html" class="menu-item"><span class="ico">🎟️</span>我的优惠券</a>
+          <a href="#" class="menu-item"><span class="ico">⭐</span>我的积分</a>
+          <a href="#" class="menu-item"><span class="ico">👑</span>会员等级</a>
+          <a href="#" class="menu-item"><span class="ico">👤</span>个人资料</a>
+          <a href="home.html" class="menu-item"><span class="ico">🚪</span>退出登录</a>
+        </nav>
+      </aside>
+
+      <!-- 主区 -->
+      <main>
+        <div style="font-size:var(--text-xs); color:var(--text-tertiary); margin-bottom:var(--space-2);">📍 F-U-050 用户中心首页</div>
+
+        <!-- 欢迎条 -->
+        <div class="welcome-bar">
+          <div>
+            <div class="greet">早上好，张小糯 👋</div>
+            <div class="meta">今日上新 12 款 · 距 V2 金卡会员还差 320 成长值</div>
+          </div>
+          <div class="vip">会员等级：<strong>V1 · 银卡</strong></div>
+        </div>
+
+        <!-- 统计卡 -->
+        <div class="stat-row">
+          <a href="my-orders.html" class="stat-card s1" style="text-decoration:none;">
+            <div class="icon">💰</div>
+            <div>
+              <div class="num">2</div>
+              <div class="label">待付款</div>
+            </div>
+          </a>
+          <a href="my-orders.html" class="stat-card s2" style="text-decoration:none;">
+            <div class="icon">📦</div>
+            <div>
+              <div class="num">3</div>
+              <div class="label">待发货</div>
+            </div>
+          </a>
+          <a href="my-orders.html" class="stat-card s3" style="text-decoration:none;">
+            <div class="icon">🚚</div>
+            <div>
+              <div class="num">1</div>
+              <div class="label">待收货</div>
+            </div>
+          </a>
+          <a href="favorites.html" class="stat-card s4" style="text-decoration:none;">
+            <div class="icon">❤️</div>
+            <div>
+              <div class="num">18</div>
+              <div class="label">收藏数</div>
+            </div>
+          </a>
+        </div>
+
+        <!-- 我的资产 -->
+        <div class="uc-section">
+          <div class="head">
+            <h3>我的资产</h3>
+            <a href="#">查看明细 ›</a>
+          </div>
+          <div class="asset-row">
+            <div class="asset-item">
+              <div class="v">2,860</div>
+              <div class="l">积分余额</div>
+            </div>
+            <div class="asset-item">
+              <div class="v">680</div>
+              <div class="l">成长值</div>
+            </div>
+            <div class="asset-item">
+              <div class="v">5</div>
+              <div class="l">优惠券(张)</div>
+            </div>
+            <div class="asset-item">
+              <div class="v">¥128.50</div>
+              <div class="l">余额</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 最近订单 -->
+        <div class="uc-section">
+          <div class="head">
+            <h3>最近订单</h3>
+            <a href="my-orders.html">查看全部 ›</a>
+          </div>
+          <div class="order-mini">
+            <div class="placeholder-img img color-3">
+              <span class="emoji">🍪</span>
+            </div>
+            <div class="info">
+              <div class="name">奥利奥经典巧克力夹心饼干 6 包</div>
+              <div class="meta">订单号 20260715-028 · 2026-07-15 09:32</div>
+            </div>
+            <div class="actions">
+              <div class="price">¥39.90</div>
+              <span class="status-tag status-pending">待发货</span>
+              <a href="my-orders.html" class="btn btn-default" style="padding:2px 12px; font-size:var(--text-xs);">查看详情</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 推荐位 -->
+        <div class="recommend-section">
+          <div class="recommend-header">
+            <div>
+              <div class="recommend-title">猜你喜欢 <span class="badge-ai">AI</span></div>
+              <div class="recommend-subtitle">基于您的浏览历史推荐</div>
+            </div>
+            <a href="#" class="section-more">换一批 ›</a>
+          </div>
+          <div class="recommend-grid">
+            <div class="product-card">
+              <div class="placeholder-img img-wrap color-2"><span class="emoji">🍩</span><span class="label">甜甜圈</span></div>
+              <div class="info">
+                <div class="name">甜甜圈草莓味 12 个装</div>
+                <div class="price-row"><span class="price">¥19.9<del>¥29.9</del></span><span class="sales">月销 2.1w</span></div>
+              </div>
+            </div>
+            <div class="product-card">
+              <div class="placeholder-img img-wrap color-4"><span class="emoji">🧁</span><span class="label">纸杯蛋糕</span></div>
+              <div class="info">
+                <div class="name">北海道牛奶纸杯蛋糕 6 个</div>
+                <div class="price-row"><span class="price">¥24.8</span><span class="sales">月销 5.3k</span></div>
+              </div>
+            </div>
+            <div class="product-card">
+              <div class="placeholder-img img-wrap color-5"><span class="emoji">🍫</span><span class="label">巧克力</span></div>
+              <div class="info">
+                <div class="name">德芙丝滑牛奶巧克力 5 块装</div>
+                <div class="price-row"><span class="price">¥18.5</span><span class="sales">月销 1.8w</span></div>
+              </div>
+            </div>
+            <div class="product-card">
+              <div class="placeholder-img img-wrap color-6"><span class="emoji">🍬</span><span class="label">棒棒糖</span></div>
+              <div class="info">
+                <div class="name">彩虹水果味棒棒糖 10 支</div>
+                <div class="price-row"><span class="price">¥12.9</span><span class="sales">月销 9.2k</span></div>
+              </div>
+            </div>
+            <div class="product-card">
+              <div class="placeholder-img img-wrap color-8"><span class="emoji">🥨</span><span class="label">咸味饼干</span></div>
+              <div class="info">
+                <div class="name">咸蛋黄麦芽饼干 8 包</div>
+                <div class="price-row"><span class="price">¥22.5</span><span class="sales">月销 3.7k</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- 底部 -->
+  <footer class="footer">
+    <div class="container">
+      <div>
+        <a href="home.html" class="logo" style="color:#fff;"><span class="logo-icon">🥨</span><span>麦乐迪零食</span></a>
+        <p style="margin-top:var(--space-3); font-size:var(--text-xs);">全球好零食 · 1小时新鲜送达</p>
+      </div>
+      <div><h4>购物指南</h4><ul><li><a href="#">购物流程</a></li><li><a href="#">会员介绍</a></li><li><a href="#">优惠券</a></li></ul></div>
+      <div><h4>配送方式</h4><ul><li><a href="#">上门自提</a></li><li><a href="#">211 限时达</a></li><li><a href="#">配送服务</a></li></ul></div>
+      <div><h4>支付方式</h4><ul><li><a href="#">货到付款</a></li><li><a href="#">在线支付</a></li><li><a href="#">分期付款</a></li></ul></div>
+      <div><h4>售后服务</h4><ul><li><a href="#">退换货政策</a></li><li><a href="#">价格保护</a></li><li><a href="#">联系客服</a></li></ul></div>
+    </div>
+  </footer>
+</body>
+</html>

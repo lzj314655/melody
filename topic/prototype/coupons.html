@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的优惠券 - 麦乐迪零食</title>
+  <link rel="stylesheet" href="styles/common.css">
+  <style>
+    .uc-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: var(--space-5);
+      margin: var(--space-5) 0;
+    }
+    .uc-sidebar {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      align-self: start;
+    }
+    .user-block {
+      text-align: center;
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: var(--space-4);
+    }
+    .user-block .avatar { width: 64px; height: 64px; font-size: 24px; margin: 0 auto var(--space-3); }
+    .user-block .nickname { font-size: var(--text-md); font-weight: 600; margin-bottom: var(--space-1); }
+    .user-block .vip-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #C0C0C0, #E8E8E8);
+      color: #555;
+      font-size: var(--text-xs);
+      padding: 2px 10px;
+      border-radius: var(--radius-full);
+      font-weight: 500;
+    }
+    .growth-row { margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-tertiary); }
+    .growth-bar { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-top: var(--space-1); }
+    .growth-bar .fill { height: 100%; background: var(--primary-gradient); border-radius: 3px; }
+    .uc-menu .menu-item {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-3); border-radius: var(--radius);
+      font-size: var(--text-base); color: var(--text-secondary);
+      margin-bottom: 2px; transition: all 0.2s;
+    }
+    .uc-menu .menu-item:hover { background: var(--primary-bg); color: var(--primary); }
+    .uc-menu .menu-item.active { background: var(--primary); color: #fff; font-weight: 500; }
+    .uc-menu .menu-item .ico { font-size: 16px; }
+
+    /* Tab */
+    .coupon-tabs {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-3) var(--space-5);
+      display: flex;
+      gap: var(--space-2);
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-sm);
+    }
+    .coupon-tab {
+      padding: var(--space-2) var(--space-5);
+      border-radius: var(--radius);
+      font-size: var(--text-base);
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    .coupon-tab:hover { color: var(--primary); }
+    .coupon-tab.active { background: var(--primary); color: #fff; font-weight: 500; }
+    .coupon-tab .count {
+      font-size: var(--text-xs);
+      margin-left: 4px;
+      opacity: 0.8;
+    }
+
+    /* 优惠券卡 */
+    .coupon-list { display: flex; flex-direction: column; gap: var(--space-4); }
+    .coupon-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      display: grid;
+      grid-template-columns: 200px 1fr 180px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      min-height: 130px;
+    }
+    .coupon-card.used, .coupon-card.expired { opacity: 0.65; }
+
+    .coupon-left {
+      background: var(--primary-gradient);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+      position: relative;
+    }
+    .coupon-left::after {
+      content: "";
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      background: var(--bg);
+      border-radius: 50%;
+    }
+    .coupon-left::before {
+      content: "";
+      position: absolute;
+      right: -6px;
+      top: -6px;
+      width: 12px;
+      height: 12px;
+      background: var(--bg);
+      border-radius: 50%;
+    }
+    .coupon-card .dotted {
+      position: absolute;
+      right: -6px;
+      bottom: -6px;
+      width: 12px;
+      height: 12px;
+      background: var(--bg);
+      border-radius: 50%;
+    }
+    .coupon-left .amount {
+      font-size: 40px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .coupon-left .amount .yuan { font-size: 22px; margin-right: 2px; font-weight: 500; }
+    .coupon-left .condition {
+      font-size: var(--text-xs);
+      margin-top: var(--space-2);
+      opacity: 0.95;
+    }
+    .coupon-left .type-tag {
+      position: absolute;
+      top: var(--space-2);
+      left: var(--space-2);
+      background: rgba(255,255,255,0.25);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      font-size: var(--text-xs);
+    }
+    .coupon-card.discount .coupon-left { background: linear-gradient(135deg, #FFB800, #FFD666); }
+    .coupon-card.member .coupon-left { background: linear-gradient(135deg, #722ED1, #B37FEB); }
+    .coupon-card.category .coupon-left { background: linear-gradient(135deg, #13C2C2, #5CDBD3); }
+    .coupon-card.used .coupon-left { background: linear-gradient(135deg, #999, #BFBFBF); }
+    .coupon-card.expired .coupon-left { background: linear-gradient(135deg, #999, #BFBFBF); }
+
+    .coupon-mid {
+      padding: var(--space-4) var(--space-5);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .coupon-mid .name {
+      font-size: var(--text-md);
+      font-weight: 600;
+      margin-bottom: var(--space-2);
+    }
+    .coupon-mid .info-row {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .coupon-mid .info-row .label { color: var(--text-tertiary); margin-right: var(--space-2); }
+    .coupon-mid .scope {
+      margin-top: var(--space-2);
+      display: flex;
+      gap: var(--space-1);
+      flex-wrap: wrap;
+    }
+    .coupon-mid .scope .tag { background: var(--primary-bg); color: var(--primary); }
+
+    .coupon-right {
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: var(--space-2);
+      border-left: 1px dashed var(--border);
+    }
+    .coupon-right .deadline {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+      text-align: center;
+    }
+    .coupon-right .use-btn {
+      width: 140px;
+    }
+
+    /* 特别说明 */
+    .info-box {
+      background: #F0F5FF;
+      border: 1px solid #D6E4FF;
+      border-left: 3px solid var(--info);
+      padding: var(--space-4) var(--space-5);
+      border-radius: var(--radius);
+      margin-top: var(--space-5);
+    }
+    .info-box .title {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .info-box .title .badge {
+      background: var(--info);
+      color: #fff;
+      padding: 1px 6px;
+      border-radius: var(--radius-sm);
+      font-size: var(--text-xs);
+    }
+    .info-box .desc {
+      color: var(--text-secondary);
+      font-size: var(--text-sm);
+      line-height: 1.7;
+    }
+    .info-box .desc strong { color: var(--primary); }
+  </style>
+</head>
+<body>
+  <!-- 顶部用户条 -->
+  <div class="top-bar">
+    <div class="container">
+      <span>Hi, 张小糯 欢迎来到麦乐迪零食</span>
+      <div>
+        <a href="home.html">首页</a>
+        <a href="#">收藏</a>
+        <a href="#">客户服务</a>
+        <a href="#">网站导航</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主导航 -->
+  <header class="main-header">
+    <div class="container">
+      <a href="home.html" class="logo">
+        <span class="logo-icon">🥨</span>
+        <span>麦乐迪零食</span>
+      </a>
+      <div class="search-box">
+        <input type="text" placeholder="搜索零食、品牌、品类...">
+        <button>搜 索</button>
+      </div>
+      <div class="header-nav">
+        <a href="user-center.html"><span class="avatar avatar-sm">糯</span> 张小糯</a>
+        <a href="#" class="cart-icon">🛒<span class="badge">3</span></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 面包屑 -->
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="home.html">首页</a>
+      <span class="sep">/</span>
+      <a href="user-center.html">用户中心</a>
+      <span class="sep">/</span>
+      <span class="current">我的优惠券</span>
+    </div>
+  </div>
+
+  <!-- 主体 -->
+  <div class="container">
+    <div class="uc-layout">
+      <!-- 左侧 sidebar -->
+      <aside class="uc-sidebar">
+        <div class="user-block">
+          <span class="avatar">糯</span>
+          <div class="nickname">张小糯</div>
+          <span class="vip-badge">V1 · 银卡会员</span>
+          <div class="growth-row">
+            成长值 680 / 1000
+            <div class="growth-bar"><div class="fill" style="width:68%"></div></div>
+          </div>
+        </div>
+        <nav class="uc-menu">
+          <a href="user-center.html" class="menu-item"><span class="ico">🏠</span>用户中心</a>
+          <a href="my-orders.html" class="menu-item"><span class="ico">📦</span>我的订单</a>
+          <a href="favorites.html" class="menu-item"><span class="ico">❤️</span>我的收藏</a>
+          <a href="address.html" class="menu-item"><span class="ico">📍</span>收货地址</a>
+          <a href="coupons.html" class="menu-item active"><span class="ico">🎟️</span>我的优惠券</a>
+          <a href="#" class="menu-item"><span class="ico">⭐</span>我的积分</a>
+          <a href="#" class="menu-item"><span class="ico">👑</span>会员等级</a>
+          <a href="#" class="menu-item"><span class="ico">👤</span>个人资料</a>
+          <a href="home.html" class="menu-item"><span class="ico">🚪</span>退出登录</a>
+        </nav>
+      </aside>
+
+      <!-- 主区 -->
+      <main>
+        <div style="font-size:var(--text-xs); color:var(--text-tertiary); margin-bottom:var(--space-2);">📍 F-U-054 我的优惠券</div>
+
+        <!-- Tab -->
+        <div class="coupon-tabs">
+          <div class="coupon-tab active">可用 <span class="count">5</span></div>
+          <div class="coupon-tab">已使用 <span class="count">8</span></div>
+          <div class="coupon-tab">已过期 <span class="count">3</span></div>
+        </div>
+
+        <!-- 优惠券列表 -->
+        <div class="coupon-list">
+          <!-- 满减券 -->
+          <div class="coupon-card">
+            <div class="coupon-left">
+              <span class="type-tag">满减券</span>
+              <div class="amount"><span class="yuan">¥</span>30</div>
+              <div class="condition">满 99 元可用</div>
+              <div class="dotted"></div>
+            </div>
+            <div class="coupon-mid">
+              <div class="name">全场通用满减券</div>
+              <div class="info-row"><span class="label">有效期间：</span>2026-07-01 至 2026-07-31</div>
+              <div class="info-row"><span class="label">使用门槛：</span>订单金额满 ¥99 可用，不含运费</div>
+              <div class="info-row"><span class="label">适用范围：</span>全品类（除部分特价商品外）</div>
+              <div class="scope">
+                <span class="tag">全场可用</span>
+                <span class="tag">不与其他优惠叠加</span>
+              </div>
+            </div>
+            <div class="coupon-right">
+              <button class="btn btn-primary use-btn">立即使用</button>
+              <button class="btn btn-default use-btn">查看详情</button>
+              <div class="deadline">还剩 16 天</div>
+            </div>
+          </div>
+
+          <!-- 折扣券 -->
+          <div class="coupon-card discount">
+            <div class="coupon-left">
+              <span class="type-tag">折扣券</span>
+              <div class="amount">8.5<span style="font-size:18px;">折</span></div>
+              <div class="condition">最高优惠 ¥50</div>
+              <div class="dotted"></div>
+            </div>
+            <div class="coupon-mid">
+              <div class="name">全场 8.5 折优惠券</div>
+              <div class="info-row"><span class="label">有效期间：</span>2026-07-10 至 2026-08-10</div>
+              <div class="info-row"><span class="label">使用门槛：</span>无门槛，最高优惠 ¥50</div>
+              <div class="info-row"><span class="label">适用范围：</span>所有商品（除部分特殊商品外）</div>
+              <div class="scope">
+                <span class="tag">无门槛</span>
+                <span class="tag">最高减 50</span>
+              </div>
+            </div>
+            <div class="coupon-right">
+              <button class="btn btn-primary use-btn">立即使用</button>
+              <button class="btn btn-default use-btn">查看详情</button>
+              <div class="deadline">还剩 26 天</div>
+            </div>
+          </div>
+
+          <!-- 新人券 -->
+          <div class="coupon-card category">
+            <div class="coupon-left">
+              <span class="type-tag">新人券</span>
+              <div class="amount"><span class="yuan">¥</span>10</div>
+              <div class="condition">无门槛</div>
+              <div class="dotted"></div>
+            </div>
+            <div class="coupon-mid">
+              <div class="name">新用户专享 10 元无门槛券</div>
+              <div class="info-row"><span class="label">有效期间：</span>2026-07-15 至 2026-07-22</div>
+              <div class="info-row"><span class="label">使用门槛：</span>无门槛，订单金额满 ¥0.01 即可</div>
+              <div class="info-row"><span class="label">适用范围：</span>全场通用（除运费外）</div>
+              <div class="scope">
+                <span class="tag">新用户专享</span>
+                <span class="tag">无门槛</span>
+                <span class="tag">7 天有效</span>
+              </div>
+            </div>
+            <div class="coupon-right">
+              <button class="btn btn-primary use-btn">立即使用</button>
+              <button class="btn btn-default use-btn">查看详情</button>
+              <div class="deadline">还剩 7 天</div>
+            </div>
+          </div>
+
+          <!-- 品类券 -->
+          <div class="coupon-card category">
+            <div class="coupon-left">
+              <span class="type-tag">品类券</span>
+              <div class="amount"><span class="yuan">¥</span>15</div>
+              <div class="condition">满 49 元可用</div>
+              <div class="dotted"></div>
+            </div>
+            <div class="coupon-mid">
+              <div class="name">膨化食品品类专享券</div>
+              <div class="info-row"><span class="label">有效期间：</span>2026-07-05 至 2026-08-05</div>
+              <div class="info-row"><span class="label">使用门槛：</span>膨化食品类订单满 ¥49 可用</div>
+              <div class="info-row"><span class="label">适用范围：</span>薯片 / 爆米花 / 锅巴 / 虾条等膨化类</div>
+              <div class="scope">
+                <span class="tag">仅限膨化食品</span>
+                <span class="tag">可叠加店铺优惠</span>
+              </div>
+            </div>
+            <div class="coupon-right">
+              <button class="btn btn-primary use-btn">立即使用</button>
+              <button class="btn btn-default use-btn">查看详情</button>
+              <div class="deadline">还剩 21 天</div>
+            </div>
+          </div>
+
+          <!-- 会员权益券 -->
+          <div class="coupon-card member">
+            <div class="coupon-left">
+              <span class="type-tag">会员权益</span>
+              <div class="amount"><span class="yuan">¥</span>50</div>
+              <div class="condition">满 199 元可用</div>
+              <div class="dotted"></div>
+            </div>
+            <div class="coupon-mid">
+              <div class="name">V1 银卡会员月度权益券</div>
+              <div class="info-row"><span class="label">有效期间：</span>2026-07-01 至 2026-07-31</div>
+              <div class="info-row"><span class="label">使用门槛：</span>订单金额满 ¥199 可用</div>
+              <div class="info-row"><span class="label">适用范围：</span>全场通用，可与其他优惠叠加</div>
+              <div class="scope">
+                <span class="tag">会员专享</span>
+                <span class="tag">每月 1 日自动发放</span>
+                <span class="tag">可叠加</span>
+              </div>
+            </div>
+            <div class="coupon-right">
+              <button class="btn btn-primary use-btn">立即使用</button>
+              <button class="btn btn-default use-btn">查看详情</button>
+              <div class="deadline">还剩 16 天</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 特别说明 -->
+        <div class="info-box">
+          <div class="title">
+            <span class="badge">V1.1</span>
+            会员等级权益券说明
+          </div>
+          <div class="desc">
+            <strong>V1.1 新增：</strong>银卡 / 金卡 / 白金卡会员每月可获赠专属权益券，<strong>由系统每月 1 日 00:00 自动发放</strong>，无需手动领取。券面额度与会员等级挂钩，等级越高权益券面值越大。当月发放的权益券当月有效，<strong>逾期未使用不予补发</strong>。如有疑问请联系在线客服。
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- 底部 -->
+  <footer class="footer">
+    <div class="container">
+      <div>
+        <a href="home.html" class="logo" style="color:#fff;"><span class="logo-icon">🥨</span><span>麦乐迪零食</span></a>
+        <p style="margin-top:var(--space-3); font-size:var(--text-xs);">全球好零食 · 1小时新鲜送达</p>
+      </div>
+      <div><h4>购物指南</h4><ul><li><a href="#">购物流程</a></li><li><a href="#">会员介绍</a></li><li><a href="#">优惠券</a></li></ul></div>
+      <div><h4>配送方式</h4><ul><li><a href="#">上门自提</a></li><li><a href="#">211 限时达</a></li><li><a href="#">配送服务</a></li></ul></div>
+      <div><h4>支付方式</h4><ul><li><a href="#">货到付款</a></li><li><a href="#">在线支付</a></li><li><a href="#">分期付款</a></li></ul></div>
+      <div><h4>售后服务</h4><ul><li><a href="#">退换货政策</a></li><li><a href="#">价格保护</a></li><li><a href="#">联系客服</a></li></ul></div>
+    </div>
+  </footer>
+</body>
+</html>

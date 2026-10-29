@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>新增/编辑商品 - 麦乐迪零食 · 管理后台</title>
+<link rel="stylesheet" href="styles/common.css">
+<style>
+  body { min-width: 1920px; }
+  .feature-id {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-3);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: var(--bg-card);
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    border: 1px dashed var(--border);
+  }
+  .feature-id::before { content: "📍"; }
+
+  .page-head {
+    margin-bottom: var(--space-5);
+  }
+  .page-head .title {
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  /* 步骤条 */
+  .steps {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: var(--space-6);
+    margin-bottom: var(--space-5);
+    display: flex;
+    align-items: center;
+  }
+  .step {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  .step .dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--text-tertiary);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    flex-shrink: 0;
+    border: 2px solid var(--border);
+  }
+  .step .txt {
+    margin-left: 12px;
+  }
+  .step .txt .name {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .step .txt .sub {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+  .step .line {
+    flex: 1;
+    height: 2px;
+    background: var(--border-light);
+    margin: 0 24px;
+    position: relative;
+  }
+  .step .line::after {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; height: 100%;
+    background: var(--primary-gradient);
+    width: 0;
+  }
+  .step.active .dot {
+    background: var(--primary-gradient);
+    color: #fff;
+    border-color: var(--primary);
+    box-shadow: var(--shadow-primary);
+  }
+  .step.active .txt .name { color: var(--primary); }
+  .step.done .dot {
+    background: var(--success);
+    color: #fff;
+    border-color: var(--success);
+  }
+  .step.done .line::after { width: 100%; background: linear-gradient(90deg, var(--primary), var(--success)); }
+
+  /* 表单卡片 */
+  .form-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: var(--space-6);
+    margin-bottom: var(--space-5);
+  }
+  .form-card .card-h {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .form-card .card-h::before {
+    content: "";
+    width: 4px; height: 16px;
+    background: var(--primary);
+    border-radius: 2px;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+  }
+
+  /* 上传 */
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-5);
+    text-align: center;
+    background: var(--bg);
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-tertiary);
+  }
+  .upload-area:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-bg); }
+  .upload-area .ico { font-size: 32px; margin-bottom: 8px; }
+  .upload-area .hint { font-size: 12px; }
+
+  .uploaded-list {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;
+  }
+  .uploaded-list .item {
+    width: 90px; height: 90px;
+    border-radius: var(--radius);
+    position: relative;
+    overflow: hidden;
+  }
+  .uploaded-list .item .del {
+    position: absolute;
+    top: 2px; right: 2px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 11px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+
+  /* 分类树 */
+  .tree-select {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+    background: #FAFAFA;
+    min-height: 120px;
+    font-size: 13px;
+  }
+  .tree-select .level {
+    display: flex; gap: 12px; margin-bottom: 8px;
+    padding: 8px 12px;
+    background: #fff;
+    border-radius: var(--radius-sm);
+    align-items: center;
+  }
+  .tree-select .level .lbl {
+    color: var(--text-tertiary); font-size: 12px; width: 50px;
+  }
+  .tree-select .level .opt {
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    background: var(--primary-bg);
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  /* SKU 规格 */
+  .spec-group {
+    background: #FAFAFA;
+    border-radius: var(--radius);
+    padding: var(--space-4);
+    margin-bottom: var(--space-3);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+  .spec-group .spec-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 80px;
+  }
+  .spec-group .spec-values {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .spec-group .spec-values .v {
+    padding: 4px 14px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .spec-group .spec-values .v.active {
+    background: var(--primary-bg);
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+  .spec-group .spec-values .v .x {
+    color: var(--text-tertiary);
+    font-size: 11px;
+  }
+  .add-spec {
+    color: var(--primary);
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  /* SKU 矩阵 */
+  .sku-table {
+    width: 100%;
+    background: #fff;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+  }
+  .sku-table th, .sku-table td {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .sku-table th {
+    background: #FAFAFA;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .sku-table input {
+    width: 100%;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+
+  /* 富文本 */
+  .editor {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .editor .toolbar {
+    background: #FAFAFA;
+    padding: var(--space-2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .editor .toolbar button {
+    width: 30px; height: 28px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .editor .toolbar button:hover { background: #fff; color: var(--primary); }
+  .editor .content {
+    padding: var(--space-4);
+    min-height: 240px;
+    color: var(--text-tertiary);
+    line-height: 1.7;
+  }
+
+  /* 底部按钮 */
+  .form-footer {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: var(--space-4) var(--space-6);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-6);
+  }
+  .form-footer .left { display: flex; gap: var(--space-2); }
+  .form-footer .right { display: flex; gap: var(--space-2); }
+</style>
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- 侧边栏 -->
+  <aside class="admin-sidebar">
+    <div class="logo">
+      <span style="font-size:24px;">🥨</span>
+      <span>麦乐迪后台</span>
+    </div>
+    <nav class="admin-menu">
+      <div class="menu-group">数据</div>
+      <a class="menu-item" href="dashboard.html"><span class="menu-icon">📊</span>数据大屏</a>
+
+      <div class="menu-group">运营</div>
+      <a class="menu-item active" href="admin-products.html"><span class="menu-icon">📦</span>商品管理</a>
+      <a class="menu-item" href="admin-orders.html"><span class="menu-icon">📋</span>订单管理</a>
+      <a class="menu-item" href="admin-coupons.html"><span class="menu-icon">🏷️</span>优惠券管理</a>
+      <a class="menu-item" href="#"><span class="menu-icon">🎯</span>营销管理</a>
+
+      <div class="menu-group">用户</div>
+      <a class="menu-item" href="admin-users.html"><span class="menu-icon">👥</span>用户管理</a>
+      <a class="menu-item" href="#"><span class="menu-icon">💎</span>会员管理</a>
+
+      <div class="menu-group">系统</div>
+      <a class="menu-item" href="#"><span class="menu-icon">⚙️</span>系统设置</a>
+      <a class="menu-item" href="#"><span class="menu-icon">📝</span>操作日志</a>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-header">
+      <div class="breadcrumb">
+        <a href="dashboard.html">首页</a> / <a href="admin-products.html">商品管理</a> / <span class="current">新增商品</span>
+      </div>
+      <div class="user-area">
+        <span>🔔 5</span>
+        <span>admin-超级管理员</span>
+        <span class="avatar color-2" style="width:32px;height:32px;">A</span>
+      </div>
+    </div>
+
+    <div class="admin-content">
+      <div class="feature-id">F-A-021 新增 / 编辑商品</div>
+      <div class="page-head">
+        <div class="title">➕ 新增商品</div>
+      </div>
+
+      <!-- 步骤条 -->
+      <div class="steps">
+        <div class="step active">
+          <div class="dot">1</div>
+          <div class="txt">
+            <div class="name">基本信息</div>
+            <div class="sub">商品名称 / 分类 / 品牌</div>
+          </div>
+        </div>
+        <div class="line"></div>
+        <div class="step">
+          <div class="dot">2</div>
+          <div class="txt">
+            <div class="name">规格 / SKU</div>
+            <div class="sub">规格组与价格库存</div>
+          </div>
+        </div>
+        <div class="line"></div>
+        <div class="step">
+          <div class="dot">3</div>
+          <div class="txt">
+            <div class="name">商品详情</div>
+            <div class="sub">图文描述</div>
+          </div>
+        </div>
+        <div class="line"></div>
+        <div class="step">
+          <div class="dot">4</div>
+          <div class="txt">
+            <div class="name">上架设置</div>
+            <div class="sub">物流 / 服务 / 提交</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1. 基本信息 -->
+      <div class="form-card">
+        <div class="card-h">① 基本信息</div>
+        <div class="form-grid">
+          <!-- 左 -->
+          <div>
+            <div class="form-item">
+              <label class="form-label required">商品名称</label>
+              <input class="form-input" value="丹麦曲奇礼盒装 800g 进口黄油饼干零食">
+            </div>
+            <div class="form-item">
+              <label class="form-label">商品副标题</label>
+              <input class="form-input" value="丹麦原装进口 · 黄油醇香 · 礼盒装 800g">
+            </div>
+            <div class="form-item">
+              <label class="form-label required">商品分类</label>
+              <div class="tree-select">
+                <div class="level">
+                  <span class="lbl">一级</span>
+                  <span class="opt">饼干糕点</span>
+                </div>
+                <div class="level">
+                  <span class="lbl">二级</span>
+                  <span class="opt">曲奇饼干</span>
+                </div>
+                <div class="level">
+                  <span class="lbl">三级</span>
+                  <span class="opt">礼盒装</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-item">
+              <label class="form-label required">商品品牌</label>
+              <select class="form-select">
+                <option>麦乐迪自营</option>
+                <option>丹麦 Kelsen</option>
+                <option>三只松鼠</option>
+              </select>
+            </div>
+          </div>
+          <!-- 右 -->
+          <div>
+            <div class="form-item">
+              <label class="form-label">商品主图（最多 5 张）</label>
+              <div class="upload-area">
+                <div class="ico">📷</div>
+                <div>点击或拖拽上传</div>
+                <div class="hint">建议尺寸 800×800 px，单张 ≤ 2MB</div>
+              </div>
+              <div class="uploaded-list">
+                <div class="item">
+                  <div class="placeholder-img" style="width:100%;height:100%;"><span class="emoji" style="font-size:32px;">🍪</span></div>
+                  <span class="del">×</span>
+                </div>
+                <div class="item">
+                  <div class="placeholder-img color-2" style="width:100%;height:100%;"><span class="emoji" style="font-size:32px;">🎁</span></div>
+                  <span class="del">×</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-item">
+              <label class="form-label required">销售价 (¥)</label>
+              <input class="form-input" value="39.90">
+            </div>
+            <div class="form-grid" style="gap:12px;">
+              <div class="form-item">
+                <label class="form-label">市场价 (¥)</label>
+                <input class="form-input" value="69.90">
+              </div>
+              <div class="form-item">
+                <label class="form-label">成本价 (¥)</label>
+                <input class="form-input" value="22.00">
+              </div>
+            </div>
+            <div class="form-grid" style="gap:12px;">
+              <div class="form-item">
+                <label class="form-label">总库存</label>
+                <input class="form-input" value="5000">
+              </div>
+              <div class="form-item">
+                <label class="form-label">初始销量</label>
+                <input class="form-input" value="0">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. SKU 规格 -->
+      <div class="form-card">
+        <div class="card-h">② 规格 / SKU（F-U-027 对应 F-A-028）</div>
+
+        <div class="spec-group">
+          <span class="spec-name">口味：</span>
+          <div class="spec-values">
+            <span class="v active">原味 <span class="x">×</span></span>
+            <span class="v active">巧克力 <span class="x">×</span></span>
+            <span class="v active">抹茶 <span class="x">×</span></span>
+            <span class="v active">草莓 <span class="x">×</span></span>
+          </div>
+        </div>
+
+        <div class="spec-group">
+          <span class="spec-name">包装：</span>
+          <div class="spec-values">
+            <span class="v active">礼盒装 <span class="x">×</span></span>
+            <span class="v active">家庭装 <span class="x">×</span></span>
+            <span class="v active">便携装 <span class="x">×</span></span>
+          </div>
+        </div>
+
+        <div class="add-spec">+ 添加规格组</div>
+
+        <div style="margin-top:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <div style="font-weight:600;">已生成 SKU 矩阵（笛卡尔积 · 共 12 个）</div>
+            <div style="display:flex;gap:8px;font-size:13px;color:var(--text-secondary);">
+              <button class="btn btn-text">批量设置价格</button>
+              <button class="btn btn-text">批量设置库存</button>
+              <button class="btn btn-text">批量设置图片</button>
+            </div>
+          </div>
+
+          <table class="sku-table">
+            <thead>
+              <tr>
+                <th>SKU 编码</th>
+                <th>规格组合</th>
+                <th style="width:120px;">价格 (¥)</th>
+                <th style="width:120px;">库存</th>
+                <th style="width:120px;">重量 (g)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="font-mono">P10086-YL-LH</span></td>
+                <td>原味 / 礼盒装</td>
+                <td><input value="39.90"></td>
+                <td><input value="800"></td>
+                <td><input value="800"></td>
+              </tr>
+              <tr>
+                <td><span class="font-mono">P10086-YL-JT</span></td>
+                <td>原味 / 家庭装</td>
+                <td><input value="49.90"></td>
+                <td><input value="600"></td>
+                <td><input value="1200"></td>
+              </tr>
+              <tr>
+                <td><span class="font-mono">P10086-YL-BX</span></td>
+                <td>原味 / 便携装</td>
+                <td><input value="19.90"></td>
+                <td><input value="800"></td>
+                <td><input value="300"></td>
+              </tr>
+              <tr>
+                <td><span class="font-mono">P10086-QK-LH</span></td>
+                <td>巧克力 / 礼盒装</td>
+                <td><input value="39.90"></td>
+                <td><input value="700"></td>
+                <td><input value="800"></td>
+              </tr>
+              <tr>
+                <td><span class="font-mono">P10086-QK-JT</span></td>
+                <td>巧克力 / 家庭装</td>
+                <td><input value="49.90"></td>
+                <td><input value="500"></td>
+                <td><input value="1200"></td>
+              </tr>
+              <tr>
+                <td><span class="font-mono">P10086-QK-BX</span></td>
+                <td>巧克力 / 便携装</td>
+                <td><input value="19.90"></td>
+                <td><input value="800"></td>
+                <td><input value="300"></td>
+              </tr>
+              <tr>
+                <td><span class="font-mono">P10086-MC-LH</span></td>
+                <td>抹茶 / 礼盒装</td>
+                <td><input value="42.90"></td>
+                <td><input value="600"></td>
+                <td><input value="800"></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="text-align:center;padding:8px;color:var(--text-tertiary);font-size:12px;background:#FAFAFA;border-radius:0 0 8px 8px;">
+            已展开 7 / 12 条　<span style="color:var(--primary);cursor:pointer;">展开全部 ▼</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 商品详情 -->
+      <div class="form-card">
+        <div class="card-h">③ 商品详情</div>
+        <div class="editor">
+          <div class="toolbar">
+            <button>𝐁</button>
+            <button style="font-style:italic;">I</button>
+            <button style="text-decoration:underline;">U</button>
+            <button style="text-decoration:line-through;">S</button>
+            <span style="width:1px;background:var(--border);margin:0 4px;"></span>
+            <button>H1</button><button>H2</button><button>H3</button>
+            <span style="width:1px;background:var(--border);margin:0 4px;"></span>
+            <button>•</button><button>1.</button><button>"</button>
+            <span style="width:1px;background:var(--border);margin:0 4px;"></span>
+            <button>↤</button><button>↦</button>
+            <button>🖼️</button><button>🎬</button>
+            <button>🔗</button>
+            <button style="margin-left:auto;color:var(--primary);">📐 模板</button>
+          </div>
+          <div class="content">
+            <p><b>🥨 丹麦曲奇礼盒装 800g · 进口黄油</b></p>
+            <br>
+            <p>　　源自丹麦百年烘焙工艺，选用天然黄油与精选小麦粉精心烘焙，奶香浓郁，酥脆可口。</p>
+            <br>
+            <p>【产品特点】</p>
+            <p>• 丹麦原装进口 · 海关溯源</p>
+            <p>• 天然黄油 · 0 反式脂肪酸</p>
+            <p>• 4 种口味 · 礼盒 / 家庭 / 便携 3 种规格</p>
+            <br>
+            <p style="color:var(--text-tertiary);">[富文本编辑器占位 · 实际编辑请使用编辑器]</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部按钮 -->
+      <div class="form-footer">
+        <div class="left">
+          <button class="btn btn-default btn-lg">← 上一步</button>
+        </div>
+        <div class="right">
+          <button class="btn btn-default btn-lg">💾 保存草稿</button>
+          <button class="btn btn-default btn-lg">下一步 →</button>
+          <button class="btn btn-primary btn-lg">🚀 立即上架</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

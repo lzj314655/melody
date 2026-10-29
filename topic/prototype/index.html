@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>麦乐迪零食 · 页面原型导航</title>
+  <link rel="stylesheet" href="styles/common.css">
+  <style>
+    body { background: linear-gradient(135deg, #FFF8F1 0%, #FFE5D9 100%); min-height: 100vh; }
+    .nav-hero {
+      background: linear-gradient(135deg, #FF6B35 0%, #FFB800 100%);
+      padding: var(--space-12) 0;
+      color: #fff;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .nav-hero::before {
+      content: "🥨 🍪 🍫 🍿 🍬";
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      font-size: 48px;
+      opacity: 0.15;
+      letter-spacing: 100px;
+    }
+    .nav-hero h1 {
+      font-size: 48px;
+      font-weight: 900;
+      margin-bottom: var(--space-3);
+      position: relative;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+    .nav-hero p {
+      font-size: var(--text-md);
+      opacity: 0.95;
+      position: relative;
+    }
+
+    .nav-meta {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-4);
+      margin-top: var(--space-5);
+      position: relative;
+      font-size: var(--text-sm);
+    }
+    .nav-meta .pill {
+      background: rgba(255,255,255,0.25);
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-section {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: var(--space-10) var(--space-5);
+    }
+
+    .nav-section-title {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-6);
+    }
+    .nav-section-title h2 {
+      font-size: var(--text-2xl);
+      font-weight: 700;
+    }
+    .nav-section-title .count {
+      background: var(--primary-bg);
+      color: var(--primary);
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      font-weight: 600;
+    }
+    .nav-section-title .divider {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: var(--space-4);
+    }
+    .page-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      transition: all 0.2s;
+      cursor: pointer;
+      border: 2px solid transparent;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      position: relative;
+    }
+    .page-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary-light);
+    }
+    .page-card.featured {
+      background: linear-gradient(135deg, #FFF1EA, #FFE5D9);
+      border-color: var(--primary);
+    }
+    .page-card.featured::before {
+      content: "⭐ 差异化亮点";
+      position: absolute;
+      top: 12px; right: 12px;
+      background: var(--primary);
+      color: #fff;
+      font-size: var(--text-xs);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-weight: 500;
+    }
+    .page-card .emoji-large {
+      font-size: 56px;
+      margin-bottom: var(--space-3);
+      display: inline-block;
+    }
+    .page-card .title {
+      font-size: var(--text-lg);
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+    }
+    .page-card .sub {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-3);
+      min-height: 2.4em;
+    }
+    .page-card .func-id {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+      font-family: var(--font-mono);
+      display: inline-block;
+      background: var(--bg);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      margin-right: 4px;
+    }
+
+    .nav-flow {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      margin-top: var(--space-8);
+    }
+    .nav-flow h3 {
+      font-size: var(--text-xl);
+      font-weight: 700;
+      margin-bottom: var(--space-4);
+    }
+    .flow-steps {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+    }
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-4);
+      background: var(--primary-bg);
+      border-radius: var(--radius);
+      font-size: var(--text-sm);
+      color: var(--primary);
+      font-weight: 500;
+    }
+    .flow-step .num {
+      width: 22px;
+      height: 22px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-xs);
+      font-family: var(--font-mono);
+    }
+    .flow-arrow {
+      color: var(--text-tertiary);
+      font-size: 18px;
+    }
+
+    .nav-footer {
+      text-align: center;
+      padding: var(--space-8) var(--space-5) var(--space-6);
+      color: var(--text-tertiary);
+      font-size: var(--text-sm);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== 头部英雄区 ===== -->
+<section class="nav-hero">
+  <h1>🥨 麦乐迪零食购物商场系统</h1>
+  <p>页面原型导航 · PRD V1.1 设计交付物</p>
+  <div class="nav-meta">
+    <span class="pill">📊 18 个原型页面</span>
+    <span class="pill">🎨 主色 #FF6B35</span>
+    <span class="pill">⭐ 2 个差异化亮点</span>
+    <span class="pill">📦 Spring Boot + Vue</span>
+  </div>
+</section>
+
+<!-- ===== 前台用户端 ===== -->
+<section class="nav-section">
+  <div class="nav-section-title">
+    <h2>🛍️ 前台 · 用户端</h2>
+    <span class="count">11 个页面</span>
+    <span class="divider"></span>
+    <span style="font-size: var(--text-sm); color: var(--text-tertiary);">设计稿宽度 1440px · 内容区 1200px</span>
+  </div>
+
+  <div class="page-grid">
+    <a href="home.html" class="page-card featured">
+      <span class="emoji-large">🏠</span>
+      <div class="title">首页</div>
+      <div class="sub">轮播、分类入口、热门、新品、个性化推荐位</div>
+      <span class="func-id">F-U-010 ~ F-U-015</span>
+    </a>
+
+    <a href="product-list.html" class="page-card">
+      <span class="emoji-large">📋</span>
+      <div class="title">商品列表</div>
+      <div class="sub">分类筛选、排序、品牌筛选、分页</div>
+      <span class="func-id">F-U-020 ~ F-U-024</span>
+    </a>
+
+    <a href="product-detail.html" class="page-card featured">
+      <span class="emoji-large">🍟</span>
+      <div class="title">商品详情</div>
+      <div class="sub">SKU 联动选择、规格参数、评价、相似推荐</div>
+      <span class="func-id">F-U-020 ~ F-U-027</span>
+    </a>
+
+    <a href="cart.html" class="page-card">
+      <span class="emoji-large">🛒</span>
+      <div class="title">购物车</div>
+      <div class="sub">商品增删、失效管理、合计金额</div>
+      <span class="func-id">F-U-030 ~ F-U-036</span>
+    </a>
+
+    <a href="order-confirm.html" class="page-card">
+      <span class="emoji-large">📝</span>
+      <div class="title">确认订单</div>
+      <div class="sub">地址、优惠券、钱包支付、合计</div>
+      <span class="func-id">F-U-040 ~ F-U-047</span>
+    </a>
+
+    <a href="payment-result.html" class="page-card">
+      <span class="emoji-large">✅</span>
+      <div class="title">支付结果</div>
+      <div class="sub">支付成功/失败双状态</div>
+      <span class="func-id">F-U-046</span>
+    </a>
+
+    <a href="user-center.html" class="page-card">
+      <span class="emoji-large">👤</span>
+      <div class="title">用户中心</div>
+      <div class="sub">侧栏菜单、订单/资产/推荐</div>
+      <span class="func-id">F-U-050 ~ F-U-056</span>
+    </a>
+
+    <a href="my-orders.html" class="page-card">
+      <span class="emoji-large">📦</span>
+      <div class="title">我的订单</div>
+      <div class="sub">6 个状态 Tab、订单详情、操作按钮</div>
+      <span class="func-id">F-U-052</span>
+    </a>
+
+    <a href="address.html" class="page-card">
+      <span class="emoji-large">📍</span>
+      <div class="title">收货地址</div>
+      <div class="sub">地址 CRUD、默认设置</div>
+      <span class="func-id">F-U-051</span>
+    </a>
+
+    <a href="favorites.html" class="page-card">
+      <span class="emoji-large">❤️</span>
+      <div class="title">我的收藏</div>
+      <div class="sub">商品网格、取消收藏、批量</div>
+      <span class="func-id">F-U-053</span>
+    </a>
+
+    <a href="coupons.html" class="page-card">
+      <span class="emoji-large">🎟️</span>
+      <div class="title">我的优惠券</div>
+      <div class="sub">可用/已用/过期、会员券自动发放</div>
+      <span class="func-id">F-U-054 + V1.1 §7.5</span>
+    </a>
+  </div>
+</section>
+
+<!-- ===== 后台管理端 ===== -->
+<section class="nav-section">
+  <div class="nav-section-title">
+    <h2>🎛️ 后台 · 管理端</h2>
+    <span class="count">7 个页面</span>
+    <span class="divider"></span>
+    <span style="font-size: var(--text-sm); color: var(--text-tertiary);">设计稿宽度 1920px · 侧栏 240px + 主区 1680px</span>
+  </div>
+
+  <div class="page-grid">
+    <a href="dashboard.html" class="page-card featured">
+      <span class="emoji-large">📊</span>
+      <div class="title">数据大屏</div>
+      <div class="sub">KPI、折线图、柱状图、饼图、实时订单</div>
+      <span class="func-id">F-D-001 ~ F-D-008</span>
+    </a>
+
+    <a href="admin-login.html" class="page-card">
+      <span class="emoji-large">🔐</span>
+      <div class="title">后台登录</div>
+      <div class="sub">账号密码登录、验证码</div>
+      <span class="func-id">F-A-060</span>
+    </a>
+
+    <a href="admin-products.html" class="page-card">
+      <span class="emoji-large">📦</span>
+      <div class="title">商品管理</div>
+      <div class="sub">CRUD、上下架、库存预警、SKU</div>
+      <span class="func-id">F-A-020 ~ F-A-028</span>
+    </a>
+
+    <a href="admin-product-form.html" class="page-card">
+      <span class="emoji-large">✏️</span>
+      <div class="title">新增/编辑商品</div>
+      <div class="sub">步骤表单、SKU 矩阵、富文本</div>
+      <span class="func-id">F-A-021 / F-A-028</span>
+    </a>
+
+    <a href="admin-orders.html" class="page-card">
+      <span class="emoji-large">📋</span>
+      <div class="title">订单管理</div>
+      <div class="sub">多条件筛选、发货、退款审核</div>
+      <span class="func-id">F-A-030 ~ F-A-035</span>
+    </a>
+
+    <a href="admin-users.html" class="page-card">
+      <span class="emoji-large">👥</span>
+      <div class="title">用户管理</div>
+      <div class="sub">CRUD、黑名单、会员等级</div>
+      <span class="func-id">F-A-040 ~ F-A-044</span>
+    </a>
+
+    <a href="admin-coupons.html" class="page-card">
+      <span class="emoji-large">🏷️</span>
+      <div class="title">优惠券管理</div>
+      <div class="sub">满减/折扣券 CRUD、库存、统计</div>
+      <span class="func-id">F-A-050 ~ F-A-054</span>
+    </a>
+  </div>
+</section>
+
+<!-- ===== 页面跳转流程图 ===== -->
+<section class="nav-section">
+  <div class="nav-section-title">
+    <h2>🗺️ 页面跳转流程图</h2>
+    <span class="count">从首页到下单</span>
+  </div>
+
+  <div class="nav-flow">
+    <h3>用户购买主流程（11 步）</h3>
+    <div class="flow-steps">
+      <span class="flow-step"><span class="num">1</span>首页 home</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step"><span class="num">2</span>商品列表 product-list</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step"><span class="num">3</span>商品详情 product-detail</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step"><span class="num">4</span>加入购物车 cart</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step"><span class="num">5</span>确认订单 order-confirm</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step"><span class="num">6</span>支付结果 payment-result</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step"><span class="num">7</span>我的订单 my-orders</span>
+    </div>
+
+    <h3 style="margin-top: var(--space-6);">后台运营主流程（6 步）</h3>
+    <div class="flow-steps">
+      <span class="flow-step"><span class="num">1</span>后台登录 admin-login</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step"><span class="num">2</span>数据大屏 dashboard</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step"><span class="num">3</span>新增商品 admin-product-form</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step"><span class="num">4</span>商品列表 admin-products</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step"><span class="num">5</span>订单管理 admin-orders</span>
+      <span class="flow-arrow">→</span>
+      <span class="flow-step"><span class="num">6</span>用户管理 admin-users</span>
+    </div>
+  </div>
+</section>
+
+<div class="nav-footer">
+  <p>📍 本目录：<code>选题/原型/</code> · 共 18 个 HTML + 1 个公共 CSS</p>
+  <p style="margin-top: 8px;">💡 双击 <code>index.html</code> 即可在浏览器中浏览全部页面</p>
+</div>
+
+</body>
+</html>

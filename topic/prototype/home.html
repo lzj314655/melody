@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>麦乐迪零食 - 首页</title>
+  <link rel="stylesheet" href="styles/common.css">
+  <style>
+    /* 页面专属样式（仅本页需要的部分） */
+    .top-search-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+      flex: 1;
+    }
+
+    .banner {
+      position: relative;
+      height: 360px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: linear-gradient(135deg, #FF6B35 0%, #FFB800 50%, #FF8C5F 100%);
+      margin: var(--space-5) 0 0;
+      display: flex;
+      align-items: center;
+      padding: 0 var(--space-12);
+      color: #fff;
+    }
+    .banner::before {
+      content: "";
+      position: absolute;
+      top: -50%; right: -10%;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 60%);
+      border-radius: 50%;
+    }
+    .banner::after {
+      content: "🍿";
+      position: absolute;
+      right: 60px; bottom: 20px;
+      font-size: 200px;
+      opacity: 0.4;
+      transform: rotate(-15deg);
+    }
+    .banner-content { position: relative; z-index: 1; max-width: 50%; }
+    .banner-tag {
+      display: inline-block;
+      background: rgba(255,255,255,0.25);
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      margin-bottom: var(--space-3);
+      backdrop-filter: blur(8px);
+    }
+    .banner-title {
+      font-size: 48px;
+      font-weight: 900;
+      line-height: 1.2;
+      margin-bottom: var(--space-4);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .banner-subtitle {
+      font-size: var(--text-md);
+      opacity: 0.95;
+      margin-bottom: var(--space-5);
+    }
+    .banner-btn {
+      display: inline-block;
+      background: #fff;
+      color: var(--primary);
+      padding: var(--space-3) var(--space-6);
+      border-radius: var(--radius-full);
+      font-weight: 700;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+    .banner-dots {
+      position: absolute;
+      bottom: var(--space-4);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: var(--space-2);
+      z-index: 2;
+    }
+    .banner-dots span {
+      width: 24px;
+      height: 4px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 2px;
+    }
+    .banner-dots span.active { background: #fff; }
+
+    /* 4 列商品网格 */
+    .goods-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4);
+    }
+    .goods-grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--space-4);
+    }
+
+    /* 推荐位 - 横向滚动风格（更凸显差异） */
+    .recommend-track {
+      display: flex;
+      gap: var(--space-4);
+      overflow-x: auto;
+      padding-bottom: var(--space-2);
+      scrollbar-width: thin;
+    }
+    .recommend-track .product-card {
+      min-width: 200px;
+      flex: 0 0 200px;
+    }
+
+    /* 互动标注 */
+    .annotate {
+      position: relative;
+      display: inline-block;
+      background: var(--accent-bg);
+      border-left: 3px solid var(--accent);
+      padding: var(--space-1) var(--space-3);
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin-left: var(--space-2);
+    }
+    .annotate::before {
+      content: "💡";
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================== 顶部用户条 ============================== -->
+<div class="top-bar">
+  <div class="container">
+    <div>👋 欢迎来到麦乐迪零食！</div>
+    <div>
+      <a href="user-center.html">我的订单</a> ·
+      <a href="user-center.html">用户中心</a> ·
+      <a href="#">商家入驻</a> ·
+      <a href="#">客户服务</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== 主导航 ============================== -->
+<header class="main-header">
+  <div class="container">
+    <a href="home.html" class="logo">
+      <span class="logo-icon">🥨</span>
+      <span>麦乐迪零食</span>
+    </a>
+
+    <div class="top-search-row">
+      <div class="search-box">
+        <input type="text" placeholder="搜索零食、品牌、场景..." value="">
+        <button>🔍 搜索</button>
+      </div>
+      <div class="header-nav">
+        <a href="user-center.html">登录 / 注册</a>
+        <a href="cart.html" style="position:relative;">
+          <span class="cart-icon">🛒<span class="badge">3</span></span>
+          <span style="margin-left:6px;">购物车</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============================== 主体 ============================== -->
+<main class="container">
+
+  <!-- ============= 分类入口 F-U-011 ============= -->
+  <section class="category-entry" style="margin-top:24px;">
+    <div class="item">
+      <div class="icon">🥜</div>
+      <div class="name">坚果</div>
+    </div>
+    <div class="item">
+      <div class="icon color-2">🍬</div>
+      <div class="name">糖果</div>
+    </div>
+    <div class="item">
+      <div class="icon color-3">🍟</div>
+      <div class="name">膨化</div>
+    </div>
+    <div class="item">
+      <div class="icon color-4">🥤</div>
+      <div class="name">饮料</div>
+    </div>
+    <div class="item">
+      <div class="icon color-5">🌶️</div>
+      <div class="name">辣条</div>
+    </div>
+    <div class="item">
+      <div class="icon color-6">🍪</div>
+      <div class="name">饼干</div>
+    </div>
+    <div class="item">
+      <div class="icon color-7">🍰</div>
+      <div class="name">糕点</div>
+    </div>
+    <div class="item">
+      <div class="icon color-8">🍫</div>
+      <div class="name">巧克力</div>
+    </div>
+    <div class="item">
+      <div class="icon color-9">🍿</div>
+      <div class="name">爆米花</div>
+    </div>
+    <div class="item">
+      <div class="icon color-10">🎁</div>
+      <div class="name">礼包组合</div>
+    </div>
+  </section>
+
+  <!-- ============= 轮播图 F-U-010 ============= -->
+  <section class="banner">
+    <div class="banner-content">
+      <span class="banner-tag">🎉 麦乐迪 6 周年庆</span>
+      <h1 class="banner-title">零食自由<br>从今天开始</h1>
+      <p class="banner-subtitle">新人首单立减 30 元 · 满 99 包邮 · 爆款 5 折起</p>
+      <a href="product-list.html" class="banner-btn">立即抢购 →</a>
+    </div>
+    <div class="banner-dots">
+      <span class="active"></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </section>
+
+  <!-- ============= 个性化推荐位 F-U-015 ⭐差异化 ============= -->
+  <section class="recommend-section" style="margin-top:32px;">
+    <div class="recommend-header">
+      <div>
+        <h2 class="recommend-title">
+          为你推荐
+          <span class="badge-ai">⭐ AI 个性化</span>
+        </h2>
+        <p class="recommend-subtitle" style="margin-top:4px;">
+          根据你过去 30 天的浏览、加购、收藏、下单行为智能推荐
+          <span class="annotate">差异化亮点：协同过滤算法（Item-CF）驱动</span>
+        </p>
+      </div>
+      <a href="#" class="section-more">换一批 ↻</a>
+    </div>
+    <div class="recommend-track">
+      <div class="product-card">
+        <div style="position:relative;">
+          <span class="badge">猜你喜欢</span>
+          <div class="placeholder-img img-wrap"><span class="emoji">🥜</span><span class="label">麻辣花生</span></div>
+        </div>
+        <div class="info">
+          <div class="name">麻辣花生 罐装 200g · 香辣酥脆</div>
+          <div class="price-row">
+            <span class="price">¥12.9</span>
+            <span class="sales">月销 2.3k</span>
+          </div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div style="position:relative;">
+          <span class="badge">猜你喜欢</span>
+          <div class="placeholder-img color-3 img-wrap"><span class="emoji">🍿</span><span class="label">焦糖爆米花</span></div>
+        </div>
+        <div class="info">
+          <div class="name">焦糖爆米花 桶装 100g · 影院同款</div>
+          <div class="price-row">
+            <span class="price">¥8.8</span>
+            <span class="sales">月销 5.1k</span>
+          </div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div style="position:relative;">
+          <span class="badge">猜你喜欢</span>
+          <div class="placeholder-img color-2 img-wrap"><span class="emoji">🍫</span><span class="label">黑巧克力</span></div>
+        </div>
+        <div class="info">
+          <div class="name">黑巧克力 86% 可可 100g · 微苦醇香</div>
+          <div class="price-row">
+            <span class="price">¥18.5</span>
+            <span class="sales">月销 980</span>
+          </div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div style="position:relative;">
+          <span class="badge">猜你喜欢</span>
+          <div class="placeholder-img color-5 img-wrap"><span class="emoji">🌶️</span><span class="label">辣条大礼包</span></div>
+        </div>
+        <div class="info">
+          <div class="name">辣条大礼包 8 种口味 · 童年回忆</div>
+          <div class="price-row">
+            <span class="price">¥29.9</span>
+            <span class="sales">月销 3.7k</span>
+          </div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div style="position:relative;">
+          <span class="badge">猜你喜欢</span>
+          <div class="placeholder-img color-6 img-wrap"><span class="emoji">🍪</span><span class="label">曲奇饼干</span></div>
+        </div>
+        <div class="info">
+          <div class="name">丹麦曲奇礼盒 312g · 节日送礼</div>
+          <div class="price-row">
+            <span class="price">¥39.9</span>
+            <span class="sales">月销 1.5k</span>
+          </div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div style="position:relative;">
+          <span class="badge">猜你喜欢</span>
+          <div class="placeholder-img color-4 img-wrap"><span class="emoji">🥤</span><span class="label">气泡水</span></div>
+        </div>
+        <div class="info">
+          <div class="name">白桃味气泡水 330ml × 12 罐</div>
+          <div class="price-row">
+            <span class="price">¥49.9</span>
+            <span class="sales">月销 2.9k</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============= 热门推荐 F-U-012 ============= -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">🔥 热门推荐</h2>
+      <a href="product-list.html" class="section-more">查看更多 →</a>
+    </div>
+    <div class="goods-grid-5">
+      <div class="product-card">
+        <div class="placeholder-img img-wrap"><span class="emoji">🍬</span><span class="label">果汁软糖</span></div>
+        <div class="info">
+          <div class="name">果汁软糖 混合水果味 500g</div>
+          <div class="price-row"><span class="price">¥15.9</span><span class="sales">月销 12k</span></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="placeholder-img color-3 img-wrap"><span class="emoji">🍟</span><span class="label">薯片大礼包</span></div>
+        <div class="info">
+          <div class="name">乐事薯片大礼包 10 包混合装</div>
+          <div class="price-row"><span class="price">¥39.9</span><span class="sales">月销 8.5k</span></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="placeholder-img color-2 img-wrap"><span class="emoji">🍰</span><span class="label">蒸蛋糕</span></div>
+        <div class="info">
+          <div class="name">蒸蛋糕整箱 1kg · 早餐必备</div>
+          <div class="price-row"><span class="price">¥24.9</span><span class="sales">月销 4.2k</span></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="placeholder-img color-5 img-wrap"><span class="emoji">🌶️</span><span class="label">麻辣王子</span></div>
+        <div class="info">
+          <div class="name">麻辣王子辣条 26g × 30 包</div>
+          <div class="price-row"><span class="price">¥22.9</span><span class="sales">月销 15k</span></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="placeholder-img color-6 img-wrap"><span class="emoji">🥜</span><span class="label">混合坚果</span></div>
+        <div class="info">
+          <div class="name">每日坚果 30 包混合装 · 营养代餐</div>
+          <div class="price-row"><span class="price">¥99.9</span><span class="sales">月销 6.1k</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============= 新品上架 F-U-013 ============= -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">✨ 新品上架</h2>
+      <a href="product-list.html" class="section-more">查看更多 →</a>
+    </div>
+    <div class="goods-grid-4">
+      <div class="product-card" style="position:relative;">
+        <span class="badge" style="background:var(--success);">新品</span>
+        <div class="placeholder-img color-2 img-wrap"><span class="emoji">🍫</span><span class="label">生巧</span></div>
+        <div class="info">
+          <div class="name">抹茶生巧克力礼盒 12 颗装</div>
+          <div class="price-row"><span class="price">¥48.0</span><span class="sales">月销 320</span></div>
+        </div>
+      </div>
+      <div class="product-card" style="position:relative;">
+        <span class="badge" style="background:var(--success);">新品</span>
+        <div class="placeholder-img color-4 img-wrap"><span class="emoji">🥤</span><span class="label">冷萃茶</span></div>
+        <div class="info">
+          <div class="name">蜜桃乌龙冷萃茶 350ml × 6 瓶</div>
+          <div class="price-row"><span class="price">¥36.0</span><span class="sales">月销 480</span></div>
+        </div>
+      </div>
+      <div class="product-card" style="position:relative;">
+        <span class="badge" style="background:var(--success);">新品</span>
+        <div class="placeholder-img color-8 img-wrap"><span class="emoji">🍿</span><span class="label">海苔卷</span></div>
+        <div class="info">
+          <div class="name">脆脆海苔卷 60g · 低热量零食</div>
+          <div class="price-row"><span class="price">¥9.9</span><span class="sales">月销 1.2k</span></div>
+        </div>
+      </div>
+      <div class="product-card" style="position:relative;">
+        <span class="badge" style="background:var(--success);">新品</span>
+        <div class="placeholder-img color-3 img-wrap"><span class="emoji">🥜</span><span class="label">腰果</span></div>
+        <div class="info">
+          <div class="name">原味腰果 罐装 250g · 越南进口</div>
+          <div class="price-row"><span class="price">¥58.0</span><span class="sales">月销 560</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============= 第二组推荐位（叠加对比效果） ⭐ ============= -->
+  <section class="recommend-section" style="margin-top:32px;">
+    <div class="recommend-header">
+      <div>
+        <h2 class="recommend-title">
+          看了又看
+          <span class="badge-ai">基于浏览</span>
+        </h2>
+        <p class="recommend-subtitle" style="margin-top:4px;">
+          根据你最近浏览的"巧克力"类目推荐相似商品
+        </p>
+      </div>
+      <a href="#" class="section-more">换一批 ↻</a>
+    </div>
+    <div class="goods-grid-5">
+      <div class="product-card">
+        <div class="placeholder-img color-2 img-wrap"><span class="emoji">🍫</span><span class="label">松露巧克力</span></div>
+        <div class="info">
+          <div class="name">欧式松露巧克力 16 颗</div>
+          <div class="price-row"><span class="price">¥68.0</span><span class="sales">月销 850</span></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="placeholder-img color-2 img-wrap"><span class="emoji">🍫</span><span class="label">榛仁巧克力</span></div>
+        <div class="info">
+          <div class="name">榛仁巧克力 200g · 节日款</div>
+          <div class="price-row"><span class="price">¥45.0</span><span class="sales">月销 720</span></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="placeholder-img color-2 img-wrap"><span class="emoji">🍫</span><span class="label">白巧克力</span></div>
+        <div class="info">
+          <div class="name">北海道白巧克力 120g</div>
+          <div class="price-row"><span class="price">¥38.0</span><span class="sales">月销 410</span></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="placeholder-img color-2 img-wrap"><span class="emoji">🍫</span><span class="label">脆皮巧克力</span></div>
+        <div class="info">
+          <div class="name">脆皮巧克力 300g · 童年回忆</div>
+          <div class="price-row"><span class="price">¥19.9</span><span class="sales">月销 2.3k</span></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="placeholder-img color-2 img-wrap"><span class="emoji">🍫</span><span class="label">夹心巧克力</span></div>
+        <div class="info">
+          <div class="name">夹心巧克力礼盒装 24 颗</div>
+          <div class="price-row"><span class="price">¥52.0</span><span class="sales">月销 980</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================== Footer ============================== -->
+<footer class="footer">
+  <div class="container">
+    <div>
+      <h4>🥨 麦乐迪零食</h4>
+      <p style="opacity:0.7; line-height:1.8; margin-top:8px;">让零食购物像逛便利店一样简单</p>
+      <p style="opacity:0.5; margin-top:12px; font-size:12px;">© 2026 Maledi Snack · 毕业设计演示项目</p>
+    </div>
+    <div>
+      <h4>购物指南</h4>
+      <ul>
+        <li><a>购物流程</a></li>
+        <li><a>常见问题</a></li>
+        <li><a>联系客服</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>配送与支付</h4>
+      <ul>
+        <li><a>配送方式</a></li>
+        <li><a>支付方式</a></li>
+        <li><a>发票信息</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>会员中心</h4>
+      <ul>
+        <li><a>成长值规则</a></li>
+        <li><a>优惠券说明</a></li>
+        <li><a>积分商城</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>关于我们</h4>
+      <ul>
+        <li><a>公司简介</a></li>
+        <li><a>团队介绍</a></li>
+        <li><a>加入我们</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

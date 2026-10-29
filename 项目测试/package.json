@@ -1,0 +1,26 @@
+{
+  "name": "melody-shop-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "麦乐迪零食商场 - 测试工程(L2 API smoke + L3 集成 + L4 UAT)",
+  "type": "module",
+  "scripts": {
+    "test": "mocha tests/l1-api/**/*.test.js --reporter spec --timeout 15000",
+    "test:l1": "mocha tests/l1-api/**/*.test.js --reporter spec --timeout 15000",
+    "test:l2": "mocha tests/l2-auth-matrix/**/*.test.js --reporter spec --timeout 15000",
+    "test:l3": "mocha tests/l3-integration/**/*.test.js --reporter spec --timeout 30000",
+    "test:l4": "mocha tests/l4-uat/**/*.test.js --reporter spec --timeout 30000",
+    "test:all": "npm run test:l1 && npm run test:l2 && npm run test:l3 && npm run test:l4",
+    "test:report": "mocha tests/**/*.test.js --reporter mochawesome --reporter-option reportDir=reports/html,overwrite=false,html=false,json=true --timeout 30000",
+    "test:smoke": "node scripts/smoke-9-images.js",
+    "test:reset": "node scripts/reset-db.js",
+    "test:summary": "node scripts/generate-summary.js"
+  },
+  "devDependencies": {
+    "axios": "^1.7.7",
+    "chai": "^4.5.0",
+    "mocha": "^10.7.3",
+    "mochawesome": "^7.1.3",
+    "mysql2": "^3.11.3"
+  }
+}

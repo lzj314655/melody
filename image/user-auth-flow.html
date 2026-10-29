@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>用户注册登录流程图</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --ink:#000000;
+    --bd:#222222;
+    --arr:#222222;
+    --muted:#555555;
+    --err-bg:#f1f1f1;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);
+    font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;color:var(--ink)}
+  .wrap{max-width:1100px;margin:16px auto;padding:0 16px}
+
+  /* 形状基类 */
+  .oval{
+    display:inline-flex;align-items:center;justify-content:center;
+    border:1.5px solid var(--bd);background:var(--fill,#ffffff);border-radius:40px;
+    padding:6px 28px;font-size:14px;font-weight:600;line-height:1;height:34px;
+  }
+  .proc{
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    border:1.5px solid var(--bd);background:var(--fill,#ffffff);border-radius:6px;
+    padding:8px 14px;font-size:13px;line-height:1.45;min-width:170px;
+  }
+  .proc small{display:block;font-weight:400;color:var(--muted);margin-top:2px;font-size:12px}
+  .proc.ok{background:#111;color:#fff;border-color:#111}
+  .proc.err{background:var(--err-bg)}
+
+  /* 菱形 = 旋转 45° 的方块，内部反向旋转回正 */
+  .dia{
+    width:138px;height:138px;position:relative;
+    border:1.5px solid var(--bd);background:var(--fill,#ffffff);
+    transform:rotate(45deg);
+    flex:0 0 auto;
+  }
+  .dia-inner{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    text-align:center;line-height:1.35;font-size:12.5px;
+    transform:rotate(-45deg);padding:22px;font-weight:600;
+  }
+
+  /* 列布局 */
+  .canvas{display:flex;flex-direction:column;align-items:center}
+  .stage{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .stage .gap{height:18px}
+
+  /* 两列 */
+  .cols{
+    display:grid;grid-template-columns:1fr 1fr;gap:60px;
+    margin-top:10px;align-items:start;position:relative;
+  }
+  .col{display:flex;flex-direction:column;align-items:center;width:100%}
+  .col .step{display:flex;flex-direction:column;align-items:center;gap:8px;width:100%}
+
+  /* 上下箭头 */
+  .arr{display:flex;justify-content:center;color:var(--arr)}
+  .arr svg{display:block}
+
+  /* 是 / 否 标记 */
+  .yn{display:flex;align-items:center;justify-content:space-between;width:80%;font-size:12px;font-weight:700;color:#000}
+  .yn span:first-child{padding-left:8px}
+  .yn span:last-child{padding-right:8px}
+
+  /* 菱形宽度适配容器 */
+  .dia-wrap{display:flex;justify-content:center;width:100%;padding:8px 0}
+
+  /* 回退箭头（错误 → 回到输入） */
+  .rollback{
+    position:relative;width:100%;height:38px;margin:2px 0;
+  }
+  .rollback svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+
+  /* 列头标签 */
+  .col-label{
+    font-size:13px;font-weight:700;letter-spacing:2px;color:#000;
+    margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #000;
+    display:inline-block;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="canvas">
+
+    <!-- 顶部 共享 -->
+    <div class="stage">
+      <div class="oval">开始</div>
+      <div class="arr"><svg width="14" height="22" viewBox="0 0 14 22"><path d="M7 1v18M2 14l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="proc" style="min-width:160px">访问认证页面</div>
+      <div class="arr"><svg width="14" height="22" viewBox="0 0 14 22"><path d="M7 1v18M2 14l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+
+    <!-- 两列 -->
+    <div class="cols">
+
+      <!-- 左列：注册流程 -->
+      <div class="col">
+        <div class="col-label">注册流程</div>
+
+        <div class="step">
+          <div class="proc">进入注册页<small>RegisterView.vue</small></div>
+          <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+          <div class="proc">输入注册信息<small>用户名 · 手机号 · 邮箱 · 密码 · 确认密码</small></div>
+          <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+          <div class="dia-wrap">
+            <div class="dia"><div class="dia-inner">客户端格式<br/>是否合法？</div></div>
+          </div>
+          <div class="yn"><span>否</span><span></span><span>是</span></div>
+        </div>
+
+        <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="step"><div class="proc err">提示错误信息<small>格式不合法 / 两次密码不一致</small></div></div>
+
+        <!-- 错误 → 回退到输入信息 -->
+        <div class="rollback">
+          <svg viewBox="0 0 400 38" preserveAspectRatio="none">
+            <defs>
+              <marker id="arr-l" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+                <path d="M0 0 L10 5 L0 10 z" fill="#222"/>
+              </marker>
+            </defs>
+            <path d="M200 0 L200 16 L60 16 L60 0" fill="none" stroke="#222" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr-l)"/>
+            <text x="68" y="13" font-size="11" fill="#000" font-weight="700">回到输入信息</text>
+          </svg>
+        </div>
+
+        <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+        <div class="step">
+          <div class="proc">提交到后端<small>POST /api/auth/register</small></div>
+          <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+          <div class="dia-wrap">
+            <div class="dia"><div class="dia-inner">用户名 / 手机号 / 邮箱<br/>是否已存在？</div></div>
+          </div>
+          <div class="yn"><span>是</span><span></span><span>否</span></div>
+        </div>
+
+        <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="step"><div class="proc err">提示错误信息<small>该账号已被注册</small></div></div>
+
+        <div class="rollback">
+          <svg viewBox="0 0 400 38" preserveAspectRatio="none">
+            <path d="M200 0 L200 16 L60 16 L60 0" fill="none" stroke="#222" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr-l)"/>
+            <text x="68" y="13" font-size="11" fill="#000" font-weight="700">回到输入信息</text>
+          </svg>
+        </div>
+
+        <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="step">
+          <div class="proc">写入 MySQL 数据库<small>user 表 / wallet_account 表，密码 BCrypt 哈希入库</small></div>
+          <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="proc ok">注册成功 → 自动登录<small>生成 JWT → 跳转首页</small></div>
+        </div>
+
+        <div class="gap" style="height:36px"></div>
+      </div>
+
+      <!-- 右列：登录流程 -->
+      <div class="col">
+        <div class="col-label">登录流程</div>
+
+        <div class="step">
+          <div class="proc">进入登录页<small>LoginView.vue</small></div>
+          <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+          <div class="proc">输入账号 + 密码<small>可勾选「记住我」</small></div>
+          <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+          <div class="proc">提交到后端<small>POST /api/auth/login</small></div>
+          <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+          <div class="dia-wrap">
+            <div class="dia"><div class="dia-inner">账号存在 +<br/>密码匹配？<br/>（BCrypt 校验）</div></div>
+          </div>
+          <div class="yn"><span>否</span><span></span><span>是</span></div>
+        </div>
+
+        <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="step"><div class="proc err">提示错误信息<small>账号不存在 / 密码错误<br/>连续失败 5 次锁定 10 分钟</small></div></div>
+
+        <div class="rollback">
+          <svg viewBox="0 0 400 38" preserveAspectRatio="none">
+            <path d="M200 0 L200 16 L60 16 L60 0" fill="none" stroke="#222" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr-l)"/>
+            <text x="68" y="13" font-size="11" fill="#000" font-weight="700">回到输入凭证</text>
+          </svg>
+        </div>
+
+        <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+        <div class="step">
+          <div class="dia-wrap">
+            <div class="dia"><div class="dia-inner">勾选<br/>「记住我」？</div></div>
+          </div>
+          <div class="yn"><span>否</span><span></span><span>是</span></div>
+        </div>
+
+        <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+        <div class="step">
+          <div class="proc">JWT 写入 Pinia store<small>仅内存，刷新即失效</small></div>
+        </div>
+
+        <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+        <div class="step">
+          <div class="proc">JWT 写入 localStorage<small>7 天免登录</small></div>
+        </div>
+
+        <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+        <div class="step">
+          <div class="dia-wrap">
+            <div class="dia"><div class="dia-inner">用户角色？</div></div>
+          </div>
+          <div class="yn"><span>管理员</span><span></span><span>普通用户</span></div>
+        </div>
+
+        <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+        <div class="step">
+          <div class="proc">→ /admin 后台首页<small>DashboardView</small></div>
+          <div class="arr"><svg width="14" height="20" viewBox="0 0 14 20"><path d="M7 1v16M2 12l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="proc">→ / 前台首页<small>HomeView</small></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 底部 共享 -->
+    <div class="stage" style="margin-top:30px">
+      <div class="arr"><svg width="14" height="22" viewBox="0 0 14 22"><path d="M7 1v18M2 14l5 5 5-5" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="oval">结束</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>收货地址 - 麦乐迪零食</title>
+  <link rel="stylesheet" href="styles/common.css">
+  <style>
+    .uc-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: var(--space-5);
+      margin: var(--space-5) 0;
+    }
+    .uc-sidebar {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      align-self: start;
+    }
+    .user-block {
+      text-align: center;
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: var(--space-4);
+    }
+    .user-block .avatar { width: 64px; height: 64px; font-size: 24px; margin: 0 auto var(--space-3); }
+    .user-block .nickname { font-size: var(--text-md); font-weight: 600; margin-bottom: var(--space-1); }
+    .user-block .vip-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #C0C0C0, #E8E8E8);
+      color: #555;
+      font-size: var(--text-xs);
+      padding: 2px 10px;
+      border-radius: var(--radius-full);
+      font-weight: 500;
+    }
+    .growth-row { margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-tertiary); }
+    .growth-bar { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-top: var(--space-1); }
+    .growth-bar .fill { height: 100%; background: var(--primary-gradient); border-radius: 3px; }
+    .uc-menu .menu-item {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-3); border-radius: var(--radius);
+      font-size: var(--text-base); color: var(--text-secondary);
+      margin-bottom: 2px; transition: all 0.2s;
+    }
+    .uc-menu .menu-item:hover { background: var(--primary-bg); color: var(--primary); }
+    .uc-menu .menu-item.active { background: var(--primary); color: #fff; font-weight: 500; }
+    .uc-menu .menu-item .ico { font-size: 16px; }
+
+    /* 地址顶部 */
+    .addr-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      padding: var(--space-4) var(--space-5);
+      border-radius: var(--radius);
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-sm);
+    }
+    .addr-head .title {
+      font-size: var(--text-md);
+      font-weight: 600;
+    }
+    .addr-head .title .num {
+      color: var(--text-tertiary);
+      font-size: var(--text-sm);
+      font-weight: 400;
+      margin-left: var(--space-2);
+    }
+
+    /* 地址卡 */
+    .addr-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+    }
+    .addr-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      border: 2px solid transparent;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .addr-card.default {
+      border-color: var(--primary);
+    }
+    .addr-card .name-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-3);
+    }
+    .addr-card .name {
+      font-size: var(--text-md);
+      font-weight: 600;
+    }
+    .addr-card .phone {
+      color: var(--text-secondary);
+      font-size: var(--text-base);
+      margin-left: var(--space-3);
+    }
+    .addr-card .default-tag {
+      background: var(--primary);
+      color: #fff;
+      font-size: var(--text-xs);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+    }
+    .addr-card .detail {
+      color: var(--text-secondary);
+      font-size: var(--text-sm);
+      line-height: 1.6;
+      margin-bottom: var(--space-3);
+    }
+    .addr-card .detail .region {
+      color: var(--text-primary);
+    }
+    .addr-card .actions {
+      display: flex;
+      gap: var(--space-3);
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--border-light);
+    }
+    .addr-card .actions a {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    .addr-card .actions a:hover { color: var(--primary); }
+    .addr-card .actions a.danger { color: var(--error); }
+    .addr-card .actions a.danger:hover { color: var(--error); opacity: 0.7; }
+    .addr-card .actions a.set-default { color: var(--text-tertiary); }
+
+    /* 提示框 */
+    .info-box {
+      background: #FFF8E7;
+      border: 1px solid #FFE7B5;
+      border-left: 3px solid var(--accent);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      font-size: var(--text-sm);
+      margin-top: var(--space-5);
+    }
+    .info-box .title {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+    }
+    .info-box ul { padding-left: var(--space-5); }
+    .info-box li { margin-bottom: 4px; list-style: disc; }
+  </style>
+</head>
+<body>
+  <!-- 顶部用户条 -->
+  <div class="top-bar">
+    <div class="container">
+      <span>Hi, 张小糯 欢迎来到麦乐迪零食</span>
+      <div>
+        <a href="home.html">首页</a>
+        <a href="#">收藏</a>
+        <a href="#">客户服务</a>
+        <a href="#">网站导航</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主导航 -->
+  <header class="main-header">
+    <div class="container">
+      <a href="home.html" class="logo">
+        <span class="logo-icon">🥨</span>
+        <span>麦乐迪零食</span>
+      </a>
+      <div class="search-box">
+        <input type="text" placeholder="搜索零食、品牌、品类...">
+        <button>搜 索</button>
+      </div>
+      <div class="header-nav">
+        <a href="user-center.html"><span class="avatar avatar-sm">糯</span> 张小糯</a>
+        <a href="#" class="cart-icon">🛒<span class="badge">3</span></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 面包屑 -->
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="home.html">首页</a>
+      <span class="sep">/</span>
+      <a href="user-center.html">用户中心</a>
+      <span class="sep">/</span>
+      <span class="current">收货地址</span>
+    </div>
+  </div>
+
+  <!-- 主体 -->
+  <div class="container">
+    <div class="uc-layout">
+      <!-- 左侧 sidebar -->
+      <aside class="uc-sidebar">
+        <div class="user-block">
+          <span class="avatar">糯</span>
+          <div class="nickname">张小糯</div>
+          <span class="vip-badge">V1 · 银卡会员</span>
+          <div class="growth-row">
+            成长值 680 / 1000
+            <div class="growth-bar"><div class="fill" style="width:68%"></div></div>
+          </div>
+        </div>
+        <nav class="uc-menu">
+          <a href="user-center.html" class="menu-item"><span class="ico">🏠</span>用户中心</a>
+          <a href="my-orders.html" class="menu-item"><span class="ico">📦</span>我的订单</a>
+          <a href="favorites.html" class="menu-item"><span class="ico">❤️</span>我的收藏</a>
+          <a href="address.html" class="menu-item active"><span class="ico">📍</span>收货地址</a>
+          <a href="coupons.html" class="menu-item"><span class="ico">🎟️</span>我的优惠券</a>
+          <a href="#" class="menu-item"><span class="ico">⭐</span>我的积分</a>
+          <a href="#" class="menu-item"><span class="ico">👑</span>会员等级</a>
+          <a href="#" class="menu-item"><span class="ico">👤</span>个人资料</a>
+          <a href="home.html" class="menu-item"><span class="ico">🚪</span>退出登录</a>
+        </nav>
+      </aside>
+
+      <!-- 主区 -->
+      <main>
+        <div style="font-size:var(--text-xs); color:var(--text-tertiary); margin-bottom:var(--space-2);">📍 F-U-051 收货地址</div>
+
+        <!-- 顶部 -->
+        <div class="addr-head">
+          <div class="title">我的收货地址 <span class="num">已保存 3 / 最多 5 个</span></div>
+          <button class="btn btn-primary">+ 新增地址</button>
+        </div>
+
+        <!-- 地址卡片网格 -->
+        <div class="addr-grid">
+          <!-- 默认地址 -->
+          <div class="addr-card default">
+            <div class="name-row">
+              <div>
+                <span class="name">张小糯</span>
+                <span class="phone">138****8888</span>
+                <span class="tag tag-info" style="margin-left:8px;">家</span>
+              </div>
+              <span class="default-tag">默认地址</span>
+            </div>
+            <div class="detail">
+              <span class="region">广东省 深圳市 南山区</span><br>
+              科技园南区高新南一道 9 号深圳湾科技生态园 10 栋 A 座 1801 室
+            </div>
+            <div class="actions">
+              <a>✏️ 编辑</a>
+              <a class="danger">🗑️ 删除</a>
+              <a class="set-default" style="margin-left:auto; color:var(--text-disabled);">✓ 已设为默认</a>
+            </div>
+          </div>
+
+          <!-- 地址 2 -->
+          <div class="addr-card">
+            <div class="name-row">
+              <div>
+                <span class="name">张小糯</span>
+                <span class="phone">138****8888</span>
+                <span class="tag tag-warning" style="margin-left:8px;">公司</span>
+              </div>
+            </div>
+            <div class="detail">
+              <span class="region">广东省 深圳市 福田区</span><br>
+              中心区福华三路星河发展中心 12 楼 1208 室
+            </div>
+            <div class="actions">
+              <a>✏️ 编辑</a>
+              <a class="danger">🗑️ 删除</a>
+              <a class="set-default" style="margin-left:auto;">设为默认</a>
+            </div>
+          </div>
+
+          <!-- 地址 3 -->
+          <div class="addr-card">
+            <div class="name-row">
+              <div>
+                <span class="name">张妈妈</span>
+                <span class="phone">139****6666</span>
+                <span class="tag tag-success" style="margin-left:8px;">父母</span>
+              </div>
+            </div>
+            <div class="detail">
+              <span class="region">湖南省 长沙市 岳麓区</span><br>
+              麓山南路 999 号湖南师范大学家属区 8 栋 302
+            </div>
+            <div class="actions">
+              <a>✏️ 编辑</a>
+              <a class="danger">🗑️ 删除</a>
+              <a class="set-default" style="margin-left:auto;">设为默认</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 提示框 -->
+        <div class="info-box">
+          <div class="title">📌 地址管理说明</div>
+          <ul>
+            <li>每位用户最多可保存 5 个收货地址，超出后请删除不常用地址后再添加</li>
+            <li>默认地址会在下单时自动选中，您也可以在结算时手动切换其他地址</li>
+            <li>为保护您的隐私，地址中的手机号将以 "138****8888" 形式脱敏显示</li>
+            <li>如需修改地址信息，请点击对应地址卡片上的"编辑"按钮进行修改</li>
+          </ul>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- 底部 -->
+  <footer class="footer">
+    <div class="container">
+      <div>
+        <a href="home.html" class="logo" style="color:#fff;"><span class="logo-icon">🥨</span><span>麦乐迪零食</span></a>
+        <p style="margin-top:var(--space-3); font-size:var(--text-xs);">全球好零食 · 1小时新鲜送达</p>
+      </div>
+      <div><h4>购物指南</h4><ul><li><a href="#">购物流程</a></li><li><a href="#">会员介绍</a></li><li><a href="#">优惠券</a></li></ul></div>
+      <div><h4>配送方式</h4><ul><li><a href="#">上门自提</a></li><li><a href="#">211 限时达</a></li><li><a href="#">配送服务</a></li></ul></div>
+      <div><h4>支付方式</h4><ul><li><a href="#">货到付款</a></li><li><a href="#">在线支付</a></li><li><a href="#">分期付款</a></li></ul></div>
+      <div><h4>售后服务</h4><ul><li><a href="#">退换货政策</a></li><li><a href="#">价格保护</a></li><li><a href="#">联系客服</a></li></ul></div>
+    </div>
+  </footer>
+</body>
+</html>

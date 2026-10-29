@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>订单管理 - 麦乐迪零食 · 管理后台</title>
+<link rel="stylesheet" href="styles/common.css">
+<style>
+  body { min-width: 1920px; }
+  .feature-id {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-3);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: var(--bg-card);
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    border: 1px dashed var(--border);
+  }
+  .feature-id::before { content: "📍"; }
+
+  .page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: var(--space-5);
+  }
+  .page-head .title {
+    font-size: 24px;
+    font-weight: 700;
+  }
+  .page-head .desc {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+  }
+
+  /* KPI */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  .kpi {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: var(--space-4);
+    border-left: 4px solid var(--primary);
+  }
+  .kpi.color-2 { border-left-color: var(--info); }
+  .kpi.color-3 { border-left-color: var(--warning); }
+  .kpi.color-4 { border-left-color: var(--success); }
+  .kpi.color-5 { border-left-color: var(--error); }
+  .kpi .lbl {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+  }
+  .kpi .val {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+  }
+  .kpi .val small {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-weight: 400;
+    margin-left: 6px;
+  }
+
+  /* 筛选 */
+  .filter-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-4);
+  }
+  .filter-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-4);
+    align-items: end;
+  }
+  .filter-row .form-item { margin-bottom: 0; }
+  .filter-actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  /* 状态多选 */
+  .status-multi {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    min-height: 38px;
+    background: var(--bg-card);
+    align-items: center;
+  }
+  .status-multi .opt {
+    padding: 2px 10px;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text-secondary);
+  }
+  .status-multi .opt.active {
+    background: var(--primary-bg);
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  /* 表格 */
+  .table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-card);
+    border-radius: var(--radius) var(--radius) 0 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .table-toolbar .left {
+    display: flex; gap: var(--space-3); align-items: center;
+    font-size: 13px; color: var(--text-secondary);
+  }
+  .table-toolbar .right { display: flex; gap: var(--space-2); }
+
+  table .order-id {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+  table .user-cell {
+    display: flex; align-items: center; gap: 8px;
+  }
+  table .user-cell .meta {
+    line-height: 1.3;
+  }
+  table .user-cell .meta .nick {
+    font-weight: 500;
+  }
+  table .user-cell .meta .phone {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+  }
+
+  .goods-cell {
+    display: flex; gap: 4px; align-items: center;
+  }
+  .goods-cell .stack {
+    position: relative;
+    width: 60px; height: 48px;
+  }
+  .goods-cell .stack .item {
+    position: absolute;
+    width: 44px; height: 44px;
+    border-radius: var(--radius-sm);
+    border: 2px solid #fff;
+    overflow: hidden;
+  }
+  .goods-cell .stack .item:nth-child(1) { top: 0; left: 0; }
+  .goods-cell .stack .item:nth-child(2) { top: 0; left: 12px; }
+  .goods-cell .stack .item:nth-child(3) { top: 0; left: 24px; }
+  .goods-cell .count {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: 4px;
+  }
+  .goods-cell .count b {
+    color: var(--primary);
+  }
+
+  .pay {
+    font-size: 12px;
+    padding: 2px 8px;
+    background: #E6F4FF;
+    color: var(--info);
+    border-radius: var(--radius-sm);
+  }
+  .pay.cod { background: #FFF7E6; color: var(--warning); }
+  .pay.wallet { background: #F3E5F5; color: #722ED1; }
+
+  .price {
+    color: var(--primary);
+    font-weight: 600;
+    font-family: var(--font-mono);
+  }
+  .price-real {
+    color: var(--error);
+    font-weight: 700;
+    font-family: var(--font-mono);
+  }
+</style>
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- 侧边栏 -->
+  <aside class="admin-sidebar">
+    <div class="logo">
+      <span style="font-size:24px;">🥨</span>
+      <span>麦乐迪后台</span>
+    </div>
+    <nav class="admin-menu">
+      <div class="menu-group">数据</div>
+      <a class="menu-item" href="dashboard.html"><span class="menu-icon">📊</span>数据大屏</a>
+
+      <div class="menu-group">运营</div>
+      <a class="menu-item" href="admin-products.html"><span class="menu-icon">📦</span>商品管理</a>
+      <a class="menu-item active" href="admin-orders.html"><span class="menu-icon">📋</span>订单管理</a>
+      <a class="menu-item" href="admin-coupons.html"><span class="menu-icon">🏷️</span>优惠券管理</a>
+      <a class="menu-item" href="#"><span class="menu-icon">🎯</span>营销管理</a>
+
+      <div class="menu-group">用户</div>
+      <a class="menu-item" href="admin-users.html"><span class="menu-icon">👥</span>用户管理</a>
+      <a class="menu-item" href="#"><span class="menu-icon">💎</span>会员管理</a>
+
+      <div class="menu-group">系统</div>
+      <a class="menu-item" href="#"><span class="menu-icon">⚙️</span>系统设置</a>
+      <a class="menu-item" href="#"><span class="menu-icon">📝</span>操作日志</a>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-header">
+      <div class="breadcrumb">
+        <a href="dashboard.html">首页</a> / <span class="current">订单管理</span>
+      </div>
+      <div class="user-area">
+        <span>🔔 5</span>
+        <span>admin-超级管理员</span>
+        <span class="avatar color-2" style="width:32px;height:32px;">A</span>
+      </div>
+    </div>
+
+    <div class="admin-content">
+      <div class="feature-id">F-A-030 ~ F-A-035 订单管理</div>
+      <div class="page-head">
+        <div>
+          <div class="title">📋 订单管理</div>
+          <div class="desc">总订单 <b style="color:var(--primary);">12,386</b> · 今日新增 168 · 待处理 23</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-default">🖨️ 打印面单</button>
+          <button class="btn btn-primary">📊 导出 Excel</button>
+        </div>
+      </div>
+
+      <!-- KPI -->
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="lbl">待付款</div>
+          <div class="val">23 <small>单</small></div>
+        </div>
+        <div class="kpi color-2">
+          <div class="lbl">待发货</div>
+          <div class="val">45 <small>单</small></div>
+        </div>
+        <div class="kpi color-3">
+          <div class="lbl">待收货</div>
+          <div class="val">128 <small>单</small></div>
+        </div>
+        <div class="kpi color-4">
+          <div class="lbl">已完成</div>
+          <div class="val">11,892 <small>单</small></div>
+        </div>
+        <div class="kpi color-5">
+          <div class="lbl">退款 / 售后</div>
+          <div class="val">18 <small>单</small></div>
+        </div>
+      </div>
+
+      <!-- 筛选 -->
+      <div class="filter-card">
+        <div class="filter-row">
+          <div class="form-item">
+            <label class="form-label">订单号</label>
+            <input class="form-input" placeholder="请输入订单号">
+          </div>
+          <div class="form-item">
+            <label class="form-label">用户手机号</label>
+            <input class="form-input" placeholder="请输入手机号">
+          </div>
+          <div class="form-item">
+            <label class="form-label">订单状态</label>
+            <div class="status-multi">
+              <span class="opt active">全部</span>
+              <span class="opt">待付款</span>
+              <span class="opt">待发货</span>
+              <span class="opt">待收货</span>
+              <span class="opt">已完成</span>
+              <span class="opt">售后</span>
+              <span class="opt">已取消</span>
+            </div>
+          </div>
+          <div class="form-item">
+            <label class="form-label">下单时间</label>
+            <input class="form-input" type="date" value="2026-07-01">
+          </div>
+          <div class="form-item">
+            <div class="filter-actions">
+              <button class="btn btn-primary">🔍 搜索</button>
+              <button class="btn btn-default">重置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 表格 -->
+      <div class="table-toolbar">
+        <div class="left">
+          <label><input type="checkbox"> 全选</label>
+          <span>已选 0 项</span>
+          <button class="btn btn-text">批量发货</button>
+          <button class="btn btn-text">批量备注</button>
+          <button class="btn btn-text">批量关闭</button>
+        </div>
+        <div class="right">
+          <select class="form-select" style="width:120px;">
+            <option>近 7 天</option>
+            <option>近 30 天</option>
+            <option>近 90 天</option>
+          </select>
+        </div>
+      </div>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:36px;"><input type="checkbox"></th>
+            <th>订单号</th>
+            <th>用户</th>
+            <th>商品</th>
+            <th>总金额</th>
+            <th>实付金额</th>
+            <th>支付方式</th>
+            <th>订单状态</th>
+            <th>下单时间</th>
+            <th style="width:200px;">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="order-id">SO202607150001</span></td>
+            <td>
+              <div class="user-cell">
+                <span class="avatar color-3" style="width:32px;height:32px;font-size:13px;">小</span>
+                <div class="meta">
+                  <div class="nick">小太阳</div>
+                  <div class="phone">138****5689</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="goods-cell">
+                <div class="stack">
+                  <div class="item"><div class="placeholder-img" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🍪</span></div></div>
+                  <div class="item"><div class="placeholder-img color-4" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🍫</span></div></div>
+                  <div class="item"><div class="placeholder-img color-3" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🥜</span></div></div>
+                </div>
+                <span class="count">共 <b>3</b> 件</span>
+              </div>
+            </td>
+            <td><span class="price">¥158.00</span></td>
+            <td><span class="price-real">¥138.00</span></td>
+            <td><span class="pay">微信支付</span></td>
+            <td><span class="status-tag status-pending">待付款</span></td>
+            <td>07-15 14:32</td>
+            <td class="actions">
+              <a>详情</a><a>关闭</a>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="order-id">SO202607150002</span></td>
+            <td>
+              <div class="user-cell">
+                <span class="avatar color-5" style="width:32px;height:32px;font-size:13px;">L</span>
+                <div class="meta">
+                  <div class="nick">Lucky 酱</div>
+                  <div class="phone">186****2103</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="goods-cell">
+                <div class="stack">
+                  <div class="item"><div class="placeholder-img color-2" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🍫</span></div></div>
+                </div>
+                <span class="count">共 <b>2</b> 件</span>
+              </div>
+            </td>
+            <td><span class="price">¥99.00</span></td>
+            <td><span class="price-real">¥89.00</span></td>
+            <td><span class="pay">支付宝</span></td>
+            <td><span class="status-tag status-paid">待发货</span></td>
+            <td>07-15 13:18</td>
+            <td class="actions">
+              <a>详情</a><a style="color:var(--primary);font-weight:600;">发货</a><a>关闭</a>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="order-id">SO202607140088</span></td>
+            <td>
+              <div class="user-cell">
+                <span class="avatar color-4" style="width:32px;height:32px;font-size:13px;">糖</span>
+                <div class="meta">
+                  <div class="nick">糖宝爱吃糖</div>
+                  <div class="phone">139****8899</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="goods-cell">
+                <div class="stack">
+                  <div class="item"><div class="placeholder-img color-4" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🍬</span></div></div>
+                  <div class="item"><div class="placeholder-img color-7" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🍭</span></div></div>
+                </div>
+                <span class="count">共 <b>5</b> 件</span>
+              </div>
+            </td>
+            <td><span class="price">¥268.00</span></td>
+            <td><span class="price-real">¥238.00</span></td>
+            <td><span class="pay">微信支付</span></td>
+            <td><span class="status-tag status-ship">待收货</span></td>
+            <td>07-14 19:42</td>
+            <td class="actions">
+              <a>详情</a><a>物流</a>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="order-id">SO202607140076</span></td>
+            <td>
+              <div class="user-cell">
+                <span class="avatar" style="width:32px;height:32px;font-size:13px;">阿</span>
+                <div class="meta">
+                  <div class="nick">阿尔卑斯</div>
+                  <div class="phone">152****0042</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="goods-cell">
+                <div class="stack">
+                  <div class="item"><div class="placeholder-img color-5" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🍿</span></div></div>
+                  <div class="item"><div class="placeholder-img color-6" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🥩</span></div></div>
+                  <div class="item"><div class="placeholder-img color-3" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🥜</span></div></div>
+                </div>
+                <span class="count">共 <b>8</b> 件</span>
+              </div>
+            </td>
+            <td><span class="price">¥486.00</span></td>
+            <td><span class="price-real">¥449.00</span></td>
+            <td><span class="pay">微信支付</span></td>
+            <td><span class="status-tag status-ship">待收货</span></td>
+            <td>07-14 16:08</td>
+            <td class="actions">
+              <a>详情</a><a>物流</a>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="order-id">SO202607130042</span></td>
+            <td>
+              <div class="user-cell">
+                <span class="avatar color-3" style="width:32px;height:32px;font-size:13px;">橙</span>
+                <div class="meta">
+                  <div class="nick">橙子味的风</div>
+                  <div class="phone">177****6612</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="goods-cell">
+                <div class="stack">
+                  <div class="item"><div class="placeholder-img color-3" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🥜</span></div></div>
+                </div>
+                <span class="count">共 <b>1</b> 件</span>
+              </div>
+            </td>
+            <td><span class="price">¥58.00</span></td>
+            <td><span class="price-real">¥58.00</span></td>
+            <td><span class="pay">微信支付</span></td>
+            <td><span class="status-tag status-done">已完成</span></td>
+            <td>07-13 21:15</td>
+            <td class="actions">
+              <a>详情</a><a>售后</a>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="order-id">SO202607130018</span></td>
+            <td>
+              <div class="user-cell">
+                <span class="avatar color-6" style="width:32px;height:32px;font-size:13px;">K</span>
+                <div class="meta">
+                  <div class="nick">Kiwi</div>
+                  <div class="phone">133****9918</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="goods-cell">
+                <div class="stack">
+                  <div class="item"><div class="placeholder-img" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🍪</span></div></div>
+                  <div class="item"><div class="placeholder-img color-4" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🍬</span></div></div>
+                </div>
+                <span class="count">共 <b>4</b> 件</span>
+              </div>
+            </td>
+            <td><span class="price">¥128.00</span></td>
+            <td><span class="price-real">¥108.00</span></td>
+            <td><span class="pay cod">货到付款</span></td>
+            <td><span class="status-tag status-done">已完成</span></td>
+            <td>07-13 11:46</td>
+            <td class="actions">
+              <a>详情</a><a>售后</a>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="order-id">SO202607120099</span></td>
+            <td>
+              <div class="user-cell">
+                <span class="avatar color-5" style="width:32px;height:32px;font-size:13px;">M</span>
+                <div class="meta">
+                  <div class="nick">Mochi 米团</div>
+                  <div class="phone">159****3320</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="goods-cell">
+                <div class="stack">
+                  <div class="item"><div class="placeholder-img color-6" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🥩</span></div></div>
+                </div>
+                <span class="count">共 <b>3</b> 件</span>
+              </div>
+            </td>
+            <td><span class="price">¥149.00</span></td>
+            <td><span class="price-real">¥149.00</span></td>
+            <td><span class="pay wallet">余额</span></td>
+            <td><span class="status-tag status-refund">售后退款</span></td>
+            <td>07-12 09:28</td>
+            <td class="actions">
+              <a>详情</a><a style="color:var(--primary);font-weight:600;">退款审核</a>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="order-id">SO202607110053</span></td>
+            <td>
+              <div class="user-cell">
+                <span class="avatar color-4" style="width:32px;height:32px;font-size:13px;">夏</span>
+                <div class="meta">
+                  <div class="nick">夏天要吃冰</div>
+                  <div class="phone">185****7762</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="goods-cell">
+                <div class="stack">
+                  <div class="item"><div class="placeholder-img color-4" style="width:100%;height:100%;"><span class="emoji" style="font-size:20px;">🍬</span></div></div>
+                </div>
+                <span class="count">共 <b>2</b> 件</span>
+              </div>
+            </td>
+            <td><span class="price">¥39.90</span></td>
+            <td><span class="price">¥0.00</span></td>
+            <td><span class="pay">-</span></td>
+            <td><span class="status-tag status-cancel">已取消</span></td>
+            <td>07-11 18:01</td>
+            <td class="actions">
+              <a>详情</a><a class="danger">删除</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 分页 -->
+      <div class="pagination">
+        <span class="page disabled">‹ 上一页</span>
+        <span class="page active">1</span>
+        <span class="page">2</span>
+        <span class="page">3</span>
+        <span class="page">4</span>
+        <span class="page">…</span>
+        <span class="page">620</span>
+        <span class="page">下一页 ›</span>
+        <span style="margin-left:16px;line-height:32px;font-size:13px;color:var(--text-tertiary);">共 12,386 条 · 20 条/页</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

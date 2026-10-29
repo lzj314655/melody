@@ -1,0 +1,142 @@
+# =====================================================================
+# 麦乐迪零食商城 —— 本地 Docker 一键部署
+#   docker compose --env-file .env.docker up -d --build
+#   访问：http://localhost:3000（前台/后台）  AI 助手走同源 /agent
+# =====================================================================
+
+services:
+  # ---------------- MySQL 8（业务库 + 聊天记录库） ----------------
+  mysql:
+    image: mysql:8.0
+    container_name: melody-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请在 .env.docker 中设置}
+      MYSQL_DATABASE: melody_shop
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --default-time-zone=+08:00
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # 初始化导入 SQL 时客户端强制 utf8mb4（否则默认 latin1 会把中文双重编码）
+      - ./deploy/mysql-charset.cnf:/etc/mysql/conf.d/charset.cnf:ro
+      # 首次启动自动按序建库 + 导入演示数据
+      - ./backend/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend/sql/data-init.sql:/docker-entrypoint-initdb.d/02-data-init.sql:ro
+      - ./backend/sql/order-alipay-columns.sql:/docker-entrypoint-initdb.d/03-order-alipay-columns.sql:ro
+      - ./backend/sql/insert-50-new-products.sql:/docker-entrypoint-initdb.d/04-insert-50-new-products.sql:ro
+      - ./backend/sql/wallet-recharge-order.sql:/docker-entrypoint-initdb.d/05-wallet-recharge-order.sql:ro
+      - ./backend/sql/migrate-to-local-images.sql:/docker-entrypoint-initdb.d/06-migrate-to-local-images.sql:ro
+      - ./backend/sql/cleanup-duplicate-coupons.sql:/docker-entrypoint-initdb.d/07-cleanup-duplicate-coupons.sql:ro
+      - ./melody-agent/sql/chat-tables.sql:/docker-entrypoint-initdb.d/08-chat-tables.sql:ro
+      - ./backend/sql/09-fix-demo-passwords.sql:/docker-entrypoint-initdb.d/09-fix-demo-passwords.sql:ro
+    ports:
+      - "3307:3306"   # 宿主机用 3307 访问容器库（避开本机 3306）
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  # ---------------- Redis（推荐系统缓存） ----------------
+  redis:
+    image: redis:7-alpine
+    container_name: melody-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"   # 避开本机 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ---------------- Spring Boot 后端 ----------------
+  backend:
+    build: ./backend
+    container_name: melody-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/melody_shop?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      APP_IMAGE_ROOT: /app/image
+      ALIPAY_APP_ID: ${ALIPAY_APP_ID:-}
+      ALIPAY_PRIVATE_KEY: ${ALIPAY_PRIVATE_KEY:-}
+      ALIPAY_PUBLIC_KEY: ${ALIPAY_PUBLIC_KEY:-}
+      SPRING_PROFILES_ACTIVE: docker
+    volumes:
+      - ./image:/app/image:ro   # 商品图片
+    ports:
+      - "8081:8080"             # 宿主机 8081 访问后端（8080 被其他项目占用时可改）
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/product/list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  # ---------------- AI 智能助手（FastAPI + DeepSeek + RAG） ----------------
+  agent:
+    build: ./melody-agent
+    container_name: melody-agent
+    restart: unless-stopped
+    environment:
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_MODEL: deepseek-chat
+      BACKEND_URL: http://backend:8080
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
+      DB_NAME: melody_shop
+      PORT: "8100"
+    # 向量模型缓存 + 向量库持久化（首次构建后离线可用）
+    volumes:
+      - agent-data:/app/data
+    ports:
+      - "8100:8100"   # 可选：本机直连调试用
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:8100/api/health')\" || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ---------------- 前端（nginx 静态 + 反代） ----------------
+  frontend:
+    build:
+      context: ./frontend_google1
+      args:
+        VITE_API_BASE: /api
+        VITE_AGENT_BASE: /agent
+    container_name: melody-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+volumes:
+  mysql-data:
+  agent-data:

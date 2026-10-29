@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+/* Custom theme variables for high precision aesthetic */
+:root {
+  --color-primary: #ff6b35;
+  --color-primary-container: #ffdbcc;
+  --color-secondary: #004e64;
+  --color-secondary-container: #e0f2f1;
+  --color-background: #fbf9f5;
+  --color-surface: #ffffff;
+}
+
+body {
+  background-color: var(--color-background);
+  color: #1b1c1a;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #dbdad6;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c5c4c0;
+}
+
+/* Font styles */
+.font-display {
+  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+}
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}

@@ -1,0 +1,72 @@
+server:
+  port: 8080
+  servlet:
+    context-path:
+
+spring:
+  profiles:
+    # 本地裸机默认激活 local（读 gitignored 的 application-local.yml）；容器内由环境变量覆盖
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  application:
+    name: melody-shop-backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 本地默认裸机 MySQL；Docker 内由 SPRING_DATASOURCE_URL 环境变量覆盖
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/melody_shop?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password:
+      database: 0
+      timeout: 3s
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+    banner: false
+  type-handlers-package: com.melody.config.handler
+
+logging:
+  level:
+    com.melody: debug
+    com.baomidou.mybatisplus: info
+
+# 本地商品图片根目录（WebMvcConfig /img/** 映射）；Docker 内挂载到 /app/image
+app:
+  image-root: ${APP_IMAGE_ROOT:D:\bishe\image}
+
+# Alipay sandbox (PC web pay + active query)
+# privateKey = app private key (sign requests); publicKey = alipay public key (verify callbacks)
+alipay:
+  appId: ${ALIPAY_APP_ID:}
+  gateway: ${ALIPAY_GATEWAY:https://openapi-sandbox.dl.alipaydev.com/gateway.do}
+  privateKey: ${ALIPAY_PRIVATE_KEY:}
+  publicKey: ${ALIPAY_PUBLIC_KEY:}
+  charset: UTF-8
+  signType: RSA2
+  format: json
+  # wallet recharge: browser redirect page after pay (vite default 5173)
+  returnUrl: ${ALIPAY_RETURN_URL:http://localhost:5173/recharge-result}
+  # async notify (needs public reach; sandbox local can't reach, active query as fallback)
+  notifyUrl: ${ALIPAY_NOTIFY_URL:http://localhost:8080/api/wallet/recharge/notify}
+  # order pay: redirect to order detail page ({id} replaced at runtime) + independent notify
+  orderReturnUrl: ${ALIPAY_ORDER_RETURN_URL:http://localhost:5173/order/{id}}
+  orderNotifyUrl: ${ALIPAY_ORDER_NOTIFY_URL:http://localhost:8080/api/order/alipay/notify}

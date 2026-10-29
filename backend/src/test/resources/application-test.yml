@@ -1,0 +1,58 @@
+# 测试 Profile 配置（H2 内存库 + 关闭定时任务/异步）
+spring:
+  datasource:
+    url: jdbc:h2:mem:melody_test;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-test.sql
+      continue-on-error: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 200ms
+      # 测试时 Redis 连不上不应阻塞 Mockito 单元测试；如需真实缓存测试改用 testcontainers
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+    banner: false
+
+# 关闭定时任务 / 异步，避免 @SpringBootTest 时误触发
+melody:
+  jwt:
+    secret: test-secret-key-melody-shop-32bytes-please
+
+logging:
+  level:
+    com.melody: warn
+    com.baomidou.mybatisplus: warn
+    org.springframework: warn
+
+# 关闭 alipay 自动配置在测试时不必要（AlipayClient bean 仍会被 AlipayConfig 创建，但沙箱 URL 不会被调用）
+alipay:
+  appId: test-app-id
+  gateway: https://openapi-sandbox.dl.alipaydev.com/gateway.do
+  privateKey: test-private-key
+  publicKey: test-public-key
+  charset: UTF-8
+  signType: RSA2
+  format: json
+  returnUrl: http://localhost/return
+  notifyUrl: http://localhost/notify
+  orderReturnUrl: http://localhost/order
+  orderNotifyUrl: http://localhost/order-notify

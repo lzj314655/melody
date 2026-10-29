@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>支付结果 - 麦乐迪零食</title>
+  <link rel="stylesheet" href="styles/common.css">
+  <style>
+    .fn-tag {
+      background: #FAFAFA;
+      color: var(--text-tertiary);
+      font-size: var(--text-xs);
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--space-4);
+      display: inline-block;
+    }
+
+    /* 步骤条 */
+    .steps {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-6) 0;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      margin-bottom: var(--space-5);
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      color: var(--text-tertiary);
+    }
+    .step .num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--border-light);
+      color: var(--text-tertiary);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600;
+    }
+    .step.done .num {
+      background: var(--success);
+      color: #fff;
+    }
+    .step.active .num {
+      background: var(--primary-gradient);
+      color: #fff;
+    }
+    .step.done { color: var(--success); }
+    .step.active { color: var(--primary); font-weight: 600; }
+    .step .label { font-size: var(--text-base); }
+    .steps .arrow {
+      width: 60px;
+      height: 2px;
+      background: var(--border);
+      margin: 0 var(--space-3);
+    }
+    .steps .arrow.done { background: var(--success); }
+
+    /* 中央结果卡片 */
+    .result-card {
+      max-width: 600px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: var(--space-10) var(--space-8);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .result-icon {
+      width: 96px;
+      height: 96px;
+      margin: 0 auto var(--space-4);
+      background: linear-gradient(135deg, #E8F8E8, #C8F0C8);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      box-shadow: 0 8px 24px rgba(82, 196, 26, 0.25);
+      position: relative;
+    }
+    .result-icon::after {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      border: 2px dashed var(--success);
+      border-radius: 50%;
+      opacity: 0.4;
+      animation: spin 12s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .result-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--success);
+      margin-bottom: var(--space-2);
+    }
+    .result-subtitle {
+      color: var(--text-secondary);
+      font-size: var(--text-md);
+      margin-bottom: var(--space-6);
+    }
+
+    .result-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3) var(--space-6);
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: var(--space-5);
+      margin-bottom: var(--space-6);
+      text-align: left;
+    }
+    .result-info .item .lbl {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+      margin-bottom: 4px;
+    }
+    .result-info .item .val {
+      font-size: var(--text-md);
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    .result-info .item .val.amount {
+      color: var(--primary);
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .result-info .item .val code {
+      font-family: var(--font-mono);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      background: #fff;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: var(--space-3);
+      justify-content: center;
+    }
+
+    /* 提示信息 */
+    .tip-box {
+      max-width: 600px;
+      margin: var(--space-4) auto;
+      background: #FFF7E6;
+      border-left: 3px solid var(--warning);
+      border-radius: var(--radius);
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+    .tip-box .title {
+      color: var(--warning);
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: var(--text-sm);
+    }
+    .tip-box code {
+      font-family: var(--font-mono);
+      background: #fff;
+      padding: 1px 6px;
+      border-radius: 3px;
+      color: var(--text-primary);
+    }
+
+    /* 推荐商品 */
+    .recommend-section {
+      max-width: 1200px;
+      margin: var(--space-8) auto 0;
+      background: linear-gradient(135deg, #FFF1EA 0%, #FFE8DC 100%);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+    }
+    .recommend-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-5);
+    }
+    .recommend-title {
+      font-size: var(--text-xl);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .recommend-subtitle {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+    .goods-grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: var(--space-4);
+    }
+    .product-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .product-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    .product-card .img-wrap {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+    }
+    .product-card .info { padding: var(--space-3); }
+    .product-card .name {
+      font-size: var(--text-sm);
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      min-height: 2.8em;
+      line-height: 1.4;
+    }
+    .product-card .price {
+      font-size: var(--text-lg);
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .product-card .price del {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+      margin-left: 4px;
+      font-weight: 400;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================== 顶部用户条 ============================== -->
+<div class="top-bar">
+  <div class="container">
+    <div>👋 欢迎来到麦乐迪零食！</div>
+    <div>
+      <a href="user-center.html">我的订单</a> ·
+      <a href="user-center.html">用户中心</a> ·
+      <a href="#">商家入驻</a> ·
+      <a href="#">客户服务</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== 主导航 ============================== -->
+<header class="main-header">
+  <div class="container">
+    <a href="home.html" class="logo">
+      <span class="logo-icon">🥨</span>
+      <span>麦乐迪零食</span>
+    </a>
+
+    <div style="display:flex; align-items:center; gap:32px; flex:1;">
+      <div class="search-box">
+        <input type="text" placeholder="搜索零食、品牌、场景..." value="">
+        <button>🔍 搜索</button>
+      </div>
+      <div class="header-nav">
+        <a href="user-center.html">登录 / 注册</a>
+        <a href="cart.html" style="position:relative;">
+          <span class="cart-icon">🛒<span class="badge">3</span></span>
+          <span style="margin-left:6px;">购物车</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============================== 主体 ============================== -->
+<main class="container">
+
+  <div class="fn-tag">📍 F-U-046 支付回调 · F-U-047 支付结果展示</div>
+
+  <!-- 面包屑 -->
+  <div class="breadcrumb">
+    <a href="home.html">首页</a>
+    <span class="sep">/</span>
+    <a href="cart.html">购物车</a>
+    <span class="sep">/</span>
+    <a href="order-confirm.html">确认订单</a>
+    <span class="sep">/</span>
+    <span class="current">支付结果</span>
+  </div>
+
+  <!-- 步骤条 -->
+  <div class="steps">
+    <div class="step done">
+      <span class="num">✓</span>
+      <span class="label">我的购物车</span>
+    </div>
+    <div class="arrow done"></div>
+    <div class="step done">
+      <span class="num">✓</span>
+      <span class="label">确认订单</span>
+    </div>
+    <div class="arrow done"></div>
+    <div class="step done">
+      <span class="num">✓</span>
+      <span class="label">支付</span>
+    </div>
+    <div class="arrow done"></div>
+    <div class="step active">
+      <span class="num">4</span>
+      <span class="label">完成</span>
+    </div>
+  </div>
+
+  <!-- 成功状态卡片（默认展示） -->
+  <!--
+    失败状态说明：
+    失败时只需替换下方 ✅ → ❌、绿色样式 → 红色样式、文案"支付成功" → "支付失败"、
+    "支付失败，请检查支付方式或账户余额"、按钮"查看订单" → "重新支付"
+  -->
+  <div class="result-card">
+    <div class="result-icon">✅</div>
+    <h1 class="result-title">支付成功</h1>
+    <p class="result-subtitle">感谢您的订购，商家将尽快为您发货</p>
+
+    <div class="result-info">
+      <div class="item">
+        <div class="lbl">订单编号</div>
+        <div class="val"><code>ORD20260715-00012345</code></div>
+      </div>
+      <div class="item">
+        <div class="lbl">支付金额</div>
+        <div class="val amount">¥130.60</div>
+      </div>
+      <div class="item">
+        <div class="lbl">支付方式</div>
+        <div class="val">💰 虚拟钱包余额支付</div>
+      </div>
+      <div class="item">
+        <div class="lbl">支付时间</div>
+        <div class="val">2026-07-15 14:23:08</div>
+      </div>
+      <div class="item">
+        <div class="lbl">收货人</div>
+        <div class="val">张小明　138****5688</div>
+      </div>
+      <div class="item">
+        <div class="lbl">配送方式</div>
+        <div class="val">普通快递 · 7-15 天到达</div>
+      </div>
+    </div>
+
+    <div class="result-actions">
+      <a href="home.html" class="btn btn-default btn-lg">返回首页</a>
+      <a href="user-center.html" class="btn btn-primary btn-lg">查看订单 →</a>
+    </div>
+  </div>
+
+  <!-- F-U-046 支付回调说明 -->
+  <div class="tip-box">
+    <div class="title">🔔 F-U-046 支付回调说明</div>
+    支付完成后，后端会异步接收 <code>payment_callback</code> 通知，并将订单状态从"待支付"更新为"已支付"，同时扣减库存。若未收到回调，前端会轮询 <code>GET /api/order/{orderNo}/status</code> 主动查询订单支付状态，最长等待 60 秒。
+  </div>
+
+  <!-- 推荐商品 -->
+  <section class="recommend-section">
+    <div class="recommend-header">
+      <div>
+        <h2 class="recommend-title">🛍️ 买了又买</h2>
+        <p class="recommend-subtitle">根据您本次购买的商品，为您推荐以下爆款</p>
+      </div>
+      <a href="product-list.html" class="btn btn-text">查看更多 →</a>
+    </div>
+    <div class="goods-grid-5">
+
+      <div class="product-card">
+        <div class="placeholder-img color-4 img-wrap"><span class="emoji">🥤</span><span class="label">气泡水</span></div>
+        <div class="info">
+          <div class="name">白桃味气泡水 330ml × 12 罐</div>
+          <div class="price">¥49.9<del>¥69.9</del></div>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="placeholder-img color-6 img-wrap"><span class="emoji">🍪</span><span class="label">曲奇</span></div>
+        <div class="info">
+          <div class="name">丹麦曲奇礼盒 312g 节日送礼</div>
+          <div class="price">¥39.9<del>¥59.9</del></div>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="placeholder-img color-7 img-wrap"><span class="emoji">🌶️</span><span class="label">辣条</span></div>
+        <div class="info">
+          <div class="name">辣条大礼包 8 种口味童年回忆</div>
+          <div class="price">¥29.9<del>¥45.9</del></div>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="placeholder-img color-2 img-wrap"><span class="emoji">🍫</span><span class="label">巧克力</span></div>
+        <div class="info">
+          <div class="name">黑巧克力 86% 可可 100g 微苦醇香</div>
+          <div class="price">¥18.5<del>¥25.0</del></div>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="placeholder-img color-8 img-wrap"><span class="emoji">🍿</span><span class="label">爆米花</span></div>
+        <div class="info">
+          <div class="name">焦糖爆米花 桶装 100g 影院同款</div>
+          <div class="price">¥8.8<del>¥12.9</del></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================== Footer ============================== -->
+<footer class="footer">
+  <div class="container">
+    <div>
+      <h4>🥨 麦乐迪零食</h4>
+      <p style="opacity:0.7; line-height:1.8; margin-top:8px;">让零食购物像逛便利店一样简单</p>
+      <p style="opacity:0.5; margin-top:12px; font-size:12px;">© 2026 Maledi Snack · 毕业设计演示项目</p>
+    </div>
+    <div>
+      <h4>购物指南</h4>
+      <ul>
+        <li><a>购物流程</a></li>
+        <li><a>常见问题</a></li>
+        <li><a>联系客服</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>配送与支付</h4>
+      <ul>
+        <li><a>配送方式</a></li>
+        <li><a>支付方式</a></li>
+        <li><a>发票信息</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>会员中心</h4>
+      <ul>
+        <li><a>成长值规则</a></li>
+        <li><a>优惠券说明</a></li>
+        <li><a>积分商城</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>关于我们</h4>
+      <ul>
+        <li><a>公司简介</a></li>
+        <li><a>团队介绍</a></li>
+        <li><a>加入我们</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

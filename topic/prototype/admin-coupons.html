@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>优惠券管理 - 麦乐迪零食 · 管理后台</title>
+<link rel="stylesheet" href="styles/common.css">
+<style>
+  body { min-width: 1920px; }
+  .feature-id {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-3);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: var(--bg-card);
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    border: 1px dashed var(--border);
+  }
+  .feature-id::before { content: "📍"; }
+
+  .page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: var(--space-5);
+  }
+  .page-head .title {
+    font-size: 24px;
+    font-weight: 700;
+  }
+  .page-head .desc {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+  }
+
+  /* KPI */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  .kpi {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0;
+    width: 4px; height: 100%;
+    background: var(--primary);
+  }
+  .kpi.color-2::before { background: var(--info); }
+  .kpi.color-3::before { background: #722ED1; }
+  .kpi.color-4::before { background: var(--success); }
+  .kpi .ico {
+    width: 48px; height: 48px;
+    border-radius: var(--radius);
+    background: var(--primary-bg);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  .kpi.color-2 .ico { background: #E6F4FF; color: var(--info); }
+  .kpi.color-3 .ico { background: #F3E5F5; color: #722ED1; }
+  .kpi.color-4 .ico { background: #E8F8E8; color: var(--success); }
+  .kpi .lbl { font-size: 12px; color: var(--text-tertiary); }
+  .kpi .val {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+  }
+
+  /* 筛选 */
+  .filter-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-4);
+  }
+  .filter-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-4);
+    align-items: end;
+  }
+  .filter-row .form-item { margin-bottom: 0; }
+  .filter-actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  /* 表格 */
+  .table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-card);
+    border-radius: var(--radius) var(--radius) 0 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .table-toolbar .left {
+    display: flex; gap: var(--space-3); align-items: center;
+    font-size: 13px; color: var(--text-secondary);
+  }
+  .table-toolbar .right { display: flex; gap: var(--space-2); }
+
+  /* 优惠券小卡 */
+  .coupon-cell {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .coupon-mini {
+    width: 72px; height: 56px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C5F 100%);
+    color: #fff;
+    padding: 6px 8px;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .coupon-mini::before, .coupon-mini::after {
+    content: "";
+    position: absolute;
+    width: 10px; height: 10px;
+    background: #fff;
+    border-radius: 50%;
+  }
+  .coupon-mini::before { left: -5px; }
+  .coupon-mini::after { right: -5px; }
+  .coupon-mini.discount {
+    background: linear-gradient(135deg, #722ED1 0%, #B37FEB 100%);
+  }
+  .coupon-mini.shipping {
+    background: linear-gradient(135deg, #1890FF 0%, #69C0FF 100%);
+  }
+  .coupon-mini .face-value {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .coupon-mini .face-value small {
+    font-size: 10px;
+    font-weight: 400;
+    margin-right: 1px;
+  }
+  .coupon-mini .unit {
+    font-size: 10px;
+    opacity: 0.9;
+  }
+
+  .coupon-meta .name {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .coupon-meta .id {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+    margin-top: 2px;
+  }
+
+  .type-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .type-满减 {
+    background: var(--primary-bg);
+    color: var(--primary);
+  }
+  .type-折扣 {
+    background: #F3E5F5;
+    color: #722ED1;
+  }
+  .type-包邮 {
+    background: #E6F4FF;
+    color: var(--info);
+  }
+
+  .threshold {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .threshold b {
+    color: var(--primary);
+    font-family: var(--font-mono);
+  }
+
+  /* 进度条 */
+  .progress-cell {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .progress-cell .nums {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+  }
+  .progress-cell .nums .used {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  .progress-cell .bar {
+    width: 100px; height: 5px;
+    background: var(--bg);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-cell .bar .fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FFD666, #FFB800);
+  }
+
+  .period {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+  }
+
+  .status-未开始 { background: #E6F4FF; color: var(--info); }
+  .status-进行中 { background: #FFF1EA; color: var(--primary); }
+  .status-已结束 { background: var(--bg); color: var(--text-tertiary); }
+  .status-已禁用 { background: #FFE7E7; color: var(--error); }
+</style>
+</head>
+<body>
+
+<div class="admin-layout">
+  <!-- 侧边栏 -->
+  <aside class="admin-sidebar">
+    <div class="logo">
+      <span style="font-size:24px;">🥨</span>
+      <span>麦乐迪后台</span>
+    </div>
+    <nav class="admin-menu">
+      <div class="menu-group">数据</div>
+      <a class="menu-item" href="dashboard.html"><span class="menu-icon">📊</span>数据大屏</a>
+
+      <div class="menu-group">运营</div>
+      <a class="menu-item" href="admin-products.html"><span class="menu-icon">📦</span>商品管理</a>
+      <a class="menu-item" href="admin-orders.html"><span class="menu-icon">📋</span>订单管理</a>
+      <a class="menu-item active" href="admin-coupons.html"><span class="menu-icon">🏷️</span>优惠券管理</a>
+      <a class="menu-item" href="#"><span class="menu-icon">🎯</span>营销管理</a>
+
+      <div class="menu-group">用户</div>
+      <a class="menu-item" href="admin-users.html"><span class="menu-icon">👥</span>用户管理</a>
+      <a class="menu-item" href="#"><span class="menu-icon">💎</span>会员管理</a>
+
+      <div class="menu-group">系统</div>
+      <a class="menu-item" href="#"><span class="menu-icon">⚙️</span>系统设置</a>
+      <a class="menu-item" href="#"><span class="menu-icon">📝</span>操作日志</a>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-header">
+      <div class="breadcrumb">
+        <a href="dashboard.html">首页</a> / <span class="current">优惠券管理</span>
+      </div>
+      <div class="user-area">
+        <span>🔔 5</span>
+        <span>admin-超级管理员</span>
+        <span class="avatar color-2" style="width:32px;height:32px;">A</span>
+      </div>
+    </div>
+
+    <div class="admin-content">
+      <div class="feature-id">F-A-050 ~ F-A-054 优惠券管理</div>
+      <div class="page-head">
+        <div>
+          <div class="title">🏷️ 优惠券管理</div>
+          <div class="desc">进行中 <b style="color:var(--primary);">8</b> 张 · 已发放 32,560 张 · 核销率 18.6%</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-default">📤 批量发放</button>
+          <button class="btn btn-primary">➕ 新增优惠券</button>
+        </div>
+      </div>
+
+      <!-- KPI -->
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="ico">🎫</div>
+          <div>
+            <div class="lbl">优惠券总数</div>
+            <div class="val">28</div>
+          </div>
+        </div>
+        <div class="kpi color-2">
+          <div class="ico">📨</div>
+          <div>
+            <div class="lbl">已领取</div>
+            <div class="val">32,560</div>
+          </div>
+        </div>
+        <div class="kpi color-3">
+          <div class="ico">✅</div>
+          <div>
+            <div class="lbl">已使用</div>
+            <div class="val">6,058</div>
+          </div>
+        </div>
+        <div class="kpi color-4">
+          <div class="ico">💰</div>
+          <div>
+            <div class="lbl">带动 GMV</div>
+            <div class="val">¥ 86,210</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 筛选 -->
+      <div class="filter-card">
+        <div class="filter-row">
+          <div class="form-item">
+            <label class="form-label">优惠券名称</label>
+            <input class="form-input" placeholder="请输入名称">
+          </div>
+          <div class="form-item">
+            <label class="form-label">类型</label>
+            <select class="form-select">
+              <option>全部类型</option>
+              <option>满减券</option>
+              <option>折扣券</option>
+              <option>包邮券</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label class="form-label">状态</label>
+            <select class="form-select">
+              <option>全部状态</option>
+              <option>未开始</option>
+              <option>进行中</option>
+              <option>已结束</option>
+              <option>已禁用</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <label class="form-label">使用场景</label>
+            <select class="form-select">
+              <option>全部场景</option>
+              <option>全场通用</option>
+              <option>指定分类</option>
+              <option>指定商品</option>
+            </select>
+          </div>
+          <div class="form-item">
+            <div class="filter-actions">
+              <button class="btn btn-primary">🔍 搜索</button>
+              <button class="btn btn-default">重置</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 表格 -->
+      <div class="table-toolbar">
+        <div class="left">
+          <label><input type="checkbox"> 全选</label>
+          <span>已选 0 项</span>
+          <button class="btn btn-text">批量启用</button>
+          <button class="btn btn-text">批量禁用</button>
+          <button class="btn btn-text" style="color:var(--error);">批量删除</button>
+        </div>
+        <div class="right">
+          <select class="form-select" style="width:120px;">
+            <option>按创建时间</option>
+            <option>按核销量</option>
+            <option>按领取量</option>
+          </select>
+        </div>
+      </div>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:36px;"><input type="checkbox"></th>
+            <th>ID</th>
+            <th colspan="2">优惠券名称</th>
+            <th>类型</th>
+            <th>面值 / 折扣</th>
+            <th>使用门槛</th>
+            <th>发放 / 领取 / 使用</th>
+            <th>有效期</th>
+            <th>状态</th>
+            <th style="width:200px;">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="font-mono">CP001</span></td>
+            <td>
+              <div class="coupon-mini">
+                <div class="face-value"><small>¥</small>10</div>
+                <div class="unit">满减券</div>
+              </div>
+            </td>
+            <td>
+              <div class="coupon-meta">
+                <div class="name">新人专享 10 元无门槛券</div>
+                <div class="id">CP001 · 全场通用</div>
+              </div>
+            </td>
+            <td><span class="type-tag type-满减">满减券</span></td>
+            <td><span style="color:var(--primary);font-weight:600;">¥10</span></td>
+            <td><span class="threshold">无门槛</span></td>
+            <td>
+              <div class="progress-cell">
+                <div class="nums">领取 <span class="used">8,260</span> / 10,000</div>
+                <div class="bar"><div class="fill" style="width:82%;"></div></div>
+              </div>
+            </td>
+            <td>
+              <div class="period">
+                2026-06-01<br>~ 2026-12-31
+              </div>
+            </td>
+            <td><span class="status-tag status-进行中">进行中</span></td>
+            <td class="actions">
+              <a>编辑</a><a>发放记录</a><a class="danger">删除</a>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="font-mono">CP002</span></td>
+            <td>
+              <div class="coupon-mini discount">
+                <div class="face-value">8.5<small>折</small></div>
+                <div class="unit">折扣券</div>
+              </div>
+            </td>
+            <td>
+              <div class="coupon-meta">
+                <div class="name">会员日 8.5 折优惠</div>
+                <div class="id">CP002 · 仅限 V2+ 用户</div>
+              </div>
+            </td>
+            <td><span class="type-tag type-折扣">折扣券</span></td>
+            <td><span style="color:#722ED1;font-weight:600;">8.5 折</span></td>
+            <td><span class="threshold">满 <b>¥99</b> 可用</span></td>
+            <td>
+              <div class="progress-cell">
+                <div class="nums">领取 <span class="used">1,560</span> / 5,000</div>
+                <div class="bar"><div class="fill" style="width:31%;"></div></div>
+              </div>
+            </td>
+            <td>
+              <div class="period">
+                2026-07-01<br>~ 2026-07-31
+              </div>
+            </td>
+            <td><span class="status-tag status-进行中">进行中</span></td>
+            <td class="actions">
+              <a>编辑</a><a>发放记录</a><a class="danger">删除</a>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="font-mono">CP003</span></td>
+            <td>
+              <div class="coupon-mini shipping">
+                <div class="face-value" style="font-size:14px;">免运费</div>
+                <div class="unit">包邮券</div>
+              </div>
+            </td>
+            <td>
+              <div class="coupon-meta">
+                <div class="name">全场包邮券</div>
+                <div class="id">CP003 · 全场通用</div>
+              </div>
+            </td>
+            <td><span class="type-tag type-包邮">包邮券</span></td>
+            <td><span style="color:var(--info);font-weight:600;">免运费</span></td>
+            <td><span class="threshold">满 <b>¥39</b> 可用</span></td>
+            <td>
+              <div class="progress-cell">
+                <div class="nums">领取 <span class="used">12,800</span> / 50,000</div>
+                <div class="bar"><div class="fill" style="width:25%;"></div></div>
+              </div>
+            </td>
+            <td>
+              <div class="period">
+                2026-01-01<br>~ 2026-12-31
+              </div>
+            </td>
+            <td><span class="status-tag status-进行中">进行中</span></td>
+            <td class="actions">
+              <a>编辑</a><a>发放记录</a><a class="danger">删除</a>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="font-mono">CP004</span></td>
+            <td>
+              <div class="coupon-mini">
+                <div class="face-value"><small>¥</small>50</div>
+                <div class="unit">满减券</div>
+              </div>
+            </td>
+            <td>
+              <div class="coupon-meta">
+                <div class="name">618 大促满 200 减 50</div>
+                <div class="id">CP004 · 全场通用</div>
+              </div>
+            </td>
+            <td><span class="type-tag type-满减">满减券</span></td>
+            <td><span style="color:var(--primary);font-weight:600;">¥50</span></td>
+            <td><span class="threshold">满 <b>¥200</b> 可用</span></td>
+            <td>
+              <div class="progress-cell">
+                <div class="nums">领取 <span class="used">5,200</span> / 5,000<br>已用 3,820</div>
+                <div class="bar"><div class="fill" style="width:100%;background:linear-gradient(90deg,#52C41A,#95DE64);"></div></div>
+              </div>
+            </td>
+            <td>
+              <div class="period">
+                2026-06-10<br>~ 2026-06-20
+              </div>
+            </td>
+            <td><span class="status-tag status-已结束">已结束</span></td>
+            <td class="actions">
+              <a>编辑</a><a>发放记录</a><a class="danger">删除</a>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="font-mono">CP005</span></td>
+            <td>
+              <div class="coupon-mini discount">
+                <div class="face-value">7<small>折</small></div>
+                <div class="unit">折扣券</div>
+              </div>
+            </td>
+            <td>
+              <div class="coupon-meta">
+                <div class="name">中秋限定 7 折券</div>
+                <div class="id">CP005 · 指定分类 · 月饼礼盒</div>
+              </div>
+            </td>
+            <td><span class="type-tag type-折扣">折扣券</span></td>
+            <td><span style="color:#722ED1;font-weight:600;">7 折</span></td>
+            <td><span class="threshold">满 <b>¥128</b> 可用</span></td>
+            <td>
+              <div class="progress-cell">
+                <div class="nums">领取 <span class="used">2,860</span> / 8,000</div>
+                <div class="bar"><div class="fill" style="width:35%;"></div></div>
+              </div>
+            </td>
+            <td>
+              <div class="period">
+                2026-08-25<br>~ 2026-09-15
+              </div>
+            </td>
+            <td><span class="status-tag status-未开始">未开始</span></td>
+            <td class="actions">
+              <a>编辑</a><a>发放记录</a><a class="danger">删除</a>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="font-mono">CP006</span></td>
+            <td>
+              <div class="coupon-mini" style="background:linear-gradient(135deg,#9E9E9E,#BDBDBD);">
+                <div class="face-value"><small>¥</small>30</div>
+                <div class="unit">满减券</div>
+              </div>
+            </td>
+            <td>
+              <div class="coupon-meta">
+                <div class="name">双 11 跨店满 300 减 30</div>
+                <div class="id">CP006 · 全场通用</div>
+              </div>
+            </td>
+            <td><span class="type-tag type-满减">满减券</span></td>
+            <td><span style="color:var(--text-tertiary);font-weight:600;">¥30</span></td>
+            <td><span class="threshold">满 <b>¥300</b> 可用</span></td>
+            <td>
+              <div class="progress-cell">
+                <div class="nums">领取 <span class="used">1,880</span> / 2,000<br>已用 0</div>
+                <div class="bar"><div class="fill" style="width:94%;background:linear-gradient(90deg,#9E9E9E,#BDBDBD);"></div></div>
+              </div>
+            </td>
+            <td>
+              <div class="period">
+                2026-11-01<br>~ 2026-11-11
+              </div>
+            </td>
+            <td><span class="status-tag status-已禁用">已禁用</span></td>
+            <td class="actions">
+              <a>编辑</a><a>发放记录</a><a class="danger">删除</a>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="checkbox"></td>
+            <td><span class="font-mono">CP007</span></td>
+            <td>
+              <div class="coupon-mini discount">
+                <div class="face-value">9<small>折</small></div>
+                <div class="unit">折扣券</div>
+              </div>
+            </td>
+            <td>
+              <div class="coupon-meta">
+                <div class="name">生日特惠 9 折券</div>
+                <div class="id">CP007 · 全场通用 · 自动发放</div>
+              </div>
+            </td>
+            <td><span class="type-tag type-折扣">折扣券</span></td>
+            <td><span style="color:#722ED1;font-weight:600;">9 折</span></td>
+            <td><span class="threshold">无门槛</span></td>
+            <td>
+              <div class="progress-cell">
+                <div class="nums">领取 <span class="used">5,820</span> / 30,000<br>已用 2,238</div>
+                <div class="bar"><div class="fill" style="width:19%;"></div></div>
+              </div>
+            </td>
+            <td>
+              <div class="period">
+                2026-01-01<br>~ 2026-12-31
+              </div>
+            </td>
+            <td><span class="status-tag status-进行中">进行中</span></td>
+            <td class="actions">
+              <a>编辑</a><a>发放记录</a><a class="danger">删除</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 分页 -->
+      <div class="pagination">
+        <span class="page disabled">‹ 上一页</span>
+        <span class="page active">1</span>
+        <span class="page">2</span>
+        <span class="page">3</span>
+        <span class="page">下一页 ›</span>
+        <span style="margin-left:16px;line-height:32px;font-size:13px;color:var(--text-tertiary);">共 28 条 · 10 条/页</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

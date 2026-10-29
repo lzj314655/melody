@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的订单 - 麦乐迪零食</title>
+  <link rel="stylesheet" href="styles/common.css">
+  <style>
+    .uc-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: var(--space-5);
+      margin: var(--space-5) 0;
+    }
+    .uc-sidebar {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      align-self: start;
+    }
+    .user-block {
+      text-align: center;
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--border-light);
+      margin-bottom: var(--space-4);
+    }
+    .user-block .avatar { width: 64px; height: 64px; font-size: 24px; margin: 0 auto var(--space-3); }
+    .user-block .nickname { font-size: var(--text-md); font-weight: 600; margin-bottom: var(--space-1); }
+    .user-block .vip-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #C0C0C0, #E8E8E8);
+      color: #555;
+      font-size: var(--text-xs);
+      padding: 2px 10px;
+      border-radius: var(--radius-full);
+      font-weight: 500;
+    }
+    .growth-row { margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-tertiary); }
+    .growth-bar { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-top: var(--space-1); }
+    .growth-bar .fill { height: 100%; background: var(--primary-gradient); border-radius: 3px; }
+    .uc-menu .menu-item {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-3); border-radius: var(--radius);
+      font-size: var(--text-base); color: var(--text-secondary);
+      margin-bottom: 2px; transition: all 0.2s;
+    }
+    .uc-menu .menu-item:hover { background: var(--primary-bg); color: var(--primary); }
+    .uc-menu .menu-item.active { background: var(--primary); color: #fff; font-weight: 500; }
+    .uc-menu .menu-item .ico { font-size: 16px; }
+
+    /* 状态 Tab */
+    .order-tabs {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-3) var(--space-5);
+      display: flex;
+      gap: var(--space-2);
+      margin-bottom: var(--space-3);
+      box-shadow: var(--shadow-sm);
+    }
+    .order-tab {
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius);
+      font-size: var(--text-base);
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    .order-tab:hover { color: var(--primary); }
+    .order-tab.active {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 500;
+    }
+    .order-tab .count {
+      font-size: var(--text-xs);
+      margin-left: 4px;
+      opacity: 0.8;
+    }
+
+    /* 搜索 */
+    .order-search {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-3) var(--space-4);
+      display: flex;
+      gap: var(--space-3);
+      align-items: center;
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-sm);
+    }
+    .order-search input {
+      flex: 1;
+      height: 36px;
+      padding: 0 var(--space-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .order-search select {
+      height: 36px;
+      padding: 0 var(--space-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+
+    /* 订单卡 */
+    .order-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .order-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-3) var(--space-5);
+      background: #FAFAFA;
+      border-bottom: 1px solid var(--border-light);
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+    .order-head .left { display: flex; gap: var(--space-5); }
+    .order-head .label { color: var(--text-tertiary); }
+    .order-head .val { color: var(--text-primary); }
+    .order-head .right .status { font-weight: 500; }
+
+    .order-body { padding: var(--space-3) var(--space-5); }
+    .order-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-3) 0;
+      border-bottom: 1px dashed var(--border-light);
+    }
+    .order-item:last-child { border-bottom: none; }
+    .order-item .img {
+      width: 80px;
+      height: 80px;
+      flex-shrink: 0;
+    }
+    .order-item .img .emoji { font-size: 40px; }
+    .order-item .img .label { display: none; }
+    .order-item .info { flex: 1; }
+    .order-item .name {
+      font-size: var(--text-base);
+      margin-bottom: var(--space-1);
+    }
+    .order-item .spec {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+    }
+    .order-item .price {
+      color: var(--text-primary);
+      font-size: var(--text-base);
+      width: 100px;
+      text-align: center;
+    }
+    .order-item .qty {
+      color: var(--text-secondary);
+      width: 80px;
+      text-align: center;
+    }
+    .order-item .btn-row {
+      width: 140px;
+      text-align: right;
+    }
+
+    .order-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-3) var(--space-5);
+      background: #FAFAFA;
+      border-top: 1px solid var(--border-light);
+    }
+    .order-foot .total {
+      font-size: var(--text-base);
+      color: var(--text-secondary);
+    }
+    .order-foot .total .num {
+      font-size: var(--text-xl);
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .order-foot .btns { display: flex; gap: var(--space-2); }
+  </style>
+</head>
+<body>
+  <!-- 顶部用户条 -->
+  <div class="top-bar">
+    <div class="container">
+      <span>Hi, 张小糯 欢迎来到麦乐迪零食</span>
+      <div>
+        <a href="home.html">首页</a>
+        <a href="#">收藏</a>
+        <a href="#">客户服务</a>
+        <a href="#">网站导航</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主导航 -->
+  <header class="main-header">
+    <div class="container">
+      <a href="home.html" class="logo">
+        <span class="logo-icon">🥨</span>
+        <span>麦乐迪零食</span>
+      </a>
+      <div class="search-box">
+        <input type="text" placeholder="搜索订单号 / 商品名...">
+        <button>搜 索</button>
+      </div>
+      <div class="header-nav">
+        <a href="user-center.html"><span class="avatar avatar-sm">糯</span> 张小糯</a>
+        <a href="#" class="cart-icon">🛒<span class="badge">3</span></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 面包屑 -->
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="home.html">首页</a>
+      <span class="sep">/</span>
+      <a href="user-center.html">用户中心</a>
+      <span class="sep">/</span>
+      <span class="current">我的订单</span>
+    </div>
+  </div>
+
+  <!-- 主体 -->
+  <div class="container">
+    <div class="uc-layout">
+      <!-- 左侧 sidebar -->
+      <aside class="uc-sidebar">
+        <div class="user-block">
+          <span class="avatar">糯</span>
+          <div class="nickname">张小糯</div>
+          <span class="vip-badge">V1 · 银卡会员</span>
+          <div class="growth-row">
+            成长值 680 / 1000
+            <div class="growth-bar"><div class="fill" style="width:68%"></div></div>
+          </div>
+        </div>
+        <nav class="uc-menu">
+          <a href="user-center.html" class="menu-item"><span class="ico">🏠</span>用户中心</a>
+          <a href="my-orders.html" class="menu-item active"><span class="ico">📦</span>我的订单</a>
+          <a href="favorites.html" class="menu-item"><span class="ico">❤️</span>我的收藏</a>
+          <a href="address.html" class="menu-item"><span class="ico">📍</span>收货地址</a>
+          <a href="coupons.html" class="menu-item"><span class="ico">🎟️</span>我的优惠券</a>
+          <a href="#" class="menu-item"><span class="ico">⭐</span>我的积分</a>
+          <a href="#" class="menu-item"><span class="ico">👑</span>会员等级</a>
+          <a href="#" class="menu-item"><span class="ico">👤</span>个人资料</a>
+          <a href="home.html" class="menu-item"><span class="ico">🚪</span>退出登录</a>
+        </nav>
+      </aside>
+
+      <!-- 主区 -->
+      <main>
+        <div style="font-size:var(--text-xs); color:var(--text-tertiary); margin-bottom:var(--space-2);">📍 F-U-052 我的订单</div>
+
+        <!-- Tab -->
+        <div class="order-tabs">
+          <div class="order-tab active">全部 <span class="count">12</span></div>
+          <div class="order-tab">待付款 <span class="count">2</span></div>
+          <div class="order-tab">待发货 <span class="count">3</span></div>
+          <div class="order-tab">待收货 <span class="count">1</span></div>
+          <div class="order-tab">已完成 <span class="count">5</span></div>
+          <div class="order-tab">售后中 <span class="count">0</span></div>
+          <div class="order-tab">已取消 <span class="count">1</span></div>
+        </div>
+
+        <!-- 搜索 -->
+        <div class="order-search">
+          <input type="text" placeholder="输入订单号或商品名搜索">
+          <select><option>近 3 个月</option><option>近 1 个月</option><option>近 1 年</option></select>
+          <button class="btn btn-primary">搜索订单</button>
+        </div>
+
+        <!-- 订单列表 -->
+        <!-- 订单1：待发货 -->
+        <div class="order-card">
+          <div class="order-head">
+            <div class="left">
+              <span><span class="label">订单号：</span><span class="val">20260715-028-3341</span></span>
+              <span><span class="label">下单时间：</span><span class="val">2026-07-15 09:32:18</span></span>
+            </div>
+            <div class="right">
+              <span class="status-tag status-ship">待发货</span>
+            </div>
+          </div>
+          <div class="order-body">
+            <div class="order-item">
+              <div class="placeholder-img img color-3"><span class="emoji">🍪</span></div>
+              <div class="info">
+                <div class="name">奥利奥经典巧克力夹心饼干家庭装</div>
+                <div class="spec">规格：原味 6 包 / 箱</div>
+              </div>
+              <div class="price">¥19.90</div>
+              <div class="qty">x 2</div>
+              <div class="btn-row"><a href="#" class="btn btn-default" style="padding:2px 10px; font-size:var(--text-xs);">申请退款</a></div>
+            </div>
+          </div>
+          <div class="order-foot">
+            <div class="total">共 2 件商品 合计：<span class="num">¥39.80</span>（含运费 ¥0.00）</div>
+            <div class="btns">
+              <button class="btn btn-default">取消订单</button>
+              <button class="btn btn-primary">提醒发货</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 订单2：待付款 -->
+        <div class="order-card">
+          <div class="order-head">
+            <div class="left">
+              <span><span class="label">订单号：</span><span class="val">20260714-115-9021</span></span>
+              <span><span class="label">下单时间：</span><span class="val">2026-07-14 21:08:55</span></span>
+            </div>
+            <div class="right">
+              <span class="status-tag status-pending">待付款</span>
+            </div>
+          </div>
+          <div class="order-body">
+            <div class="order-item">
+              <div class="placeholder-img img color-5"><span class="emoji">🍫</span></div>
+              <div class="info">
+                <div class="name">德芙丝滑牛奶巧克力礼盒装</div>
+                <div class="spec">规格：250g · 5 块装</div>
+              </div>
+              <div class="price">¥39.90</div>
+              <div class="qty">x 1</div>
+              <div class="btn-row"></div>
+            </div>
+            <div class="order-item">
+              <div class="placeholder-img img color-2"><span class="emoji">🍬</span></div>
+              <div class="info">
+                <div class="name">彩虹棒棒糖水果味 10 支装</div>
+                <div class="spec">规格：混合水果味 10 支</div>
+              </div>
+              <div class="price">¥12.90</div>
+              <div class="qty">x 1</div>
+              <div class="btn-row"></div>
+            </div>
+          </div>
+          <div class="order-foot">
+            <div class="total">共 2 件商品 合计：<span class="num">¥52.80</span>（含运费 ¥6.00）</div>
+            <div class="btns">
+              <button class="btn btn-default">取消订单</button>
+              <button class="btn btn-primary">立即支付</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 订单3：待收货 -->
+        <div class="order-card">
+          <div class="order-head">
+            <div class="left">
+              <span><span class="label">订单号：</span><span class="val">20260712-002-7782</span></span>
+              <span><span class="label">下单时间：</span><span class="val">2026-07-12 15:42:01</span></span>
+            </div>
+            <div class="right">
+              <span class="status-tag status-paid">已发货</span>
+            </div>
+          </div>
+          <div class="order-body">
+            <div class="order-item">
+              <div class="placeholder-img img color-4"><span class="emoji">🍩</span></div>
+              <div class="info">
+                <div class="name">甜甜圈草莓奶油味 12 个装</div>
+                <div class="spec">规格：12 个 / 盒 · 保质期 7 天</div>
+              </div>
+              <div class="price">¥19.90</div>
+              <div class="qty">x 1</div>
+              <div class="btn-row"></div>
+            </div>
+          </div>
+          <div class="order-foot">
+            <div class="total">共 1 件商品 合计：<span class="num">¥19.90</span>（含运费 ¥0.00）</div>
+            <div class="btns">
+              <button class="btn btn-default">查看物流</button>
+              <button class="btn btn-primary">确认收货</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 订单4：已完成 -->
+        <div class="order-card">
+          <div class="order-head">
+            <div class="left">
+              <span><span class="label">订单号：</span><span class="val">20260705-221-6612</span></span>
+              <span><span class="label">下单时间：</span><span class="val">2026-07-05 10:18:33</span></span>
+            </div>
+            <div class="right">
+              <span class="status-tag status-done">已完成</span>
+            </div>
+          </div>
+          <div class="order-body">
+            <div class="order-item">
+              <div class="placeholder-img img color-6"><span class="emoji">🧁</span></div>
+              <div class="info">
+                <div class="name">北海道牛奶纸杯蛋糕 6 个</div>
+                <div class="spec">规格：6 个 / 盒</div>
+              </div>
+              <div class="price">¥24.80</div>
+              <div class="qty">x 2</div>
+              <div class="btn-row"></div>
+            </div>
+            <div class="order-item">
+              <div class="placeholder-img img color-8"><span class="emoji">🥨</span></div>
+              <div class="info">
+                <div class="name">咸蛋黄麦芽饼干 8 包家庭装</div>
+                <div class="spec">规格：8 包 / 袋</div>
+              </div>
+              <div class="price">¥22.50</div>
+              <div class="qty">x 1</div>
+              <div class="btn-row"></div>
+            </div>
+          </div>
+          <div class="order-foot">
+            <div class="total">共 3 件商品 合计：<span class="num">¥72.10</span>（含运费 ¥0.00）</div>
+            <div class="btns">
+              <button class="btn btn-default">删除订单</button>
+              <button class="btn btn-primary">再次购买</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 订单5：已取消 -->
+        <div class="order-card">
+          <div class="order-head">
+            <div class="left">
+              <span><span class="label">订单号：</span><span class="val">20260628-080-4487</span></span>
+              <span><span class="label">下单时间：</span><span class="val">2026-06-28 18:05:11</span></span>
+            </div>
+            <div class="right">
+              <span class="status-tag status-cancel">已取消</span>
+            </div>
+          </div>
+          <div class="order-body">
+            <div class="order-item">
+              <div class="placeholder-img img color-7"><span class="emoji">🍿</span></div>
+              <div class="info">
+                <div class="name">原味爆米花大桶装 360g</div>
+                <div class="spec">规格：360g / 桶 · 焦糖味</div>
+              </div>
+              <div class="price">¥15.80</div>
+              <div class="qty">x 1</div>
+              <div class="btn-row"></div>
+            </div>
+          </div>
+          <div class="order-foot">
+            <div class="total">共 1 件商品 合计：<span class="num">¥15.80</span>（含运费 ¥6.00）</div>
+            <div class="btns">
+              <button class="btn btn-default">删除订单</button>
+              <button class="btn btn-primary">重新购买</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分页 -->
+        <div class="pagination">
+          <span class="page disabled">‹ 上一页</span>
+          <span class="page active">1</span>
+          <span class="page">2</span>
+          <span class="page">3</span>
+          <span class="page">下一页 ›</span>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- 底部 -->
+  <footer class="footer">
+    <div class="container">
+      <div>
+        <a href="home.html" class="logo" style="color:#fff;"><span class="logo-icon">🥨</span><span>麦乐迪零食</span></a>
+        <p style="margin-top:var(--space-3); font-size:var(--text-xs);">全球好零食 · 1小时新鲜送达</p>
+      </div>
+      <div><h4>购物指南</h4><ul><li><a href="#">购物流程</a></li><li><a href="#">会员介绍</a></li><li><a href="#">优惠券</a></li></ul></div>
+      <div><h4>配送方式</h4><ul><li><a href="#">上门自提</a></li><li><a href="#">211 限时达</a></li><li><a href="#">配送服务</a></li></ul></div>
+      <div><h4>支付方式</h4><ul><li><a href="#">货到付款</a></li><li><a href="#">在线支付</a></li><li><a href="#">分期付款</a></li></ul></div>
+      <div><h4>售后服务</h4><ul><li><a href="#">退换货政策</a></li><li><a href="#">价格保护</a></li><li><a href="#">联系客服</a></li></ul></div>
+    </div>
+  </footer>
+</body>
+</html>

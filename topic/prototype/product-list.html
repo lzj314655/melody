@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商品列表 - 麦乐迪零食</title>
+  <link rel="stylesheet" href="styles/common.css">
+  <style>
+    .fn-tag {
+      background: #FAFAFA;
+      color: var(--text-tertiary);
+      font-size: var(--text-xs);
+      padding: 4px 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--space-4);
+      display: inline-block;
+    }
+
+    .list-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: var(--space-5);
+      margin-top: var(--space-4);
+    }
+
+    /* 左侧分类树 */
+    .category-panel {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-4);
+      align-self: start;
+      position: sticky;
+      top: 20px;
+    }
+    .category-panel h3 {
+      font-size: var(--text-md);
+      font-weight: 700;
+      margin-bottom: var(--space-3);
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .cat-group { margin-bottom: var(--space-3); }
+    .cat-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--text-base);
+      font-weight: 600;
+      color: var(--text-primary);
+      padding: 6px 0;
+      cursor: pointer;
+    }
+    .cat-title:hover { color: var(--primary); }
+    .cat-title .arrow { font-size: 10px; color: var(--text-tertiary); }
+    .cat-sub {
+      padding-left: 22px;
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      padding-top: 4px;
+      padding-bottom: 4px;
+      cursor: pointer;
+    }
+    .cat-sub:hover { color: var(--primary); }
+    .cat-sub.active { color: var(--primary); font-weight: 500; }
+
+    /* 筛选条 */
+    .filter-row {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: var(--space-3) var(--space-4);
+      margin-bottom: var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--text-sm);
+    }
+    .filter-row .label {
+      color: var(--text-tertiary);
+      min-width: 56px;
+    }
+    .filter-row .tag-chip {
+      padding: 4px 12px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    .filter-row .tag-chip:hover { background: var(--primary-bg); color: var(--primary); }
+    .filter-row .tag-chip.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    .stock-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    .stock-toggle input { accent-color: var(--primary); }
+
+    /* 4 列商品网格 */
+    .goods-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4);
+    }
+    .product-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: 1px solid transparent;
+      position: relative;
+    }
+    .product-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary-light);
+    }
+    .product-card .img-wrap {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+    }
+    .product-card .info { padding: var(--space-3); }
+    .product-card .name {
+      font-size: var(--text-sm);
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.4;
+      min-height: 2.8em;
+    }
+    .product-card .price {
+      font-size: var(--text-lg);
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .product-card .price del {
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+      margin-left: var(--space-1);
+      font-weight: 400;
+    }
+    .product-card .meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: var(--space-2);
+      font-size: var(--text-xs);
+      color: var(--text-tertiary);
+    }
+    .fav-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      z-index: 2;
+      cursor: pointer;
+    }
+    .fav-btn:hover { background: #fff; transform: scale(1.1); }
+  </style>
+</head>
+<body>
+
+<!-- ============================== 顶部用户条 ============================== -->
+<div class="top-bar">
+  <div class="container">
+    <div>👋 欢迎来到麦乐迪零食！</div>
+    <div>
+      <a href="user-center.html">我的订单</a> ·
+      <a href="user-center.html">用户中心</a> ·
+      <a href="#">商家入驻</a> ·
+      <a href="#">客户服务</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============================== 主导航 ============================== -->
+<header class="main-header">
+  <div class="container">
+    <a href="home.html" class="logo">
+      <span class="logo-icon">🥨</span>
+      <span>麦乐迪零食</span>
+    </a>
+
+    <div style="display:flex; align-items:center; gap:32px; flex:1;">
+      <div class="search-box">
+        <input type="text" placeholder="搜索零食、品牌、场景..." value="薯片">
+        <button>🔍 搜索</button>
+      </div>
+      <div class="header-nav">
+        <a href="user-center.html">登录 / 注册</a>
+        <a href="cart.html" style="position:relative;">
+          <span class="cart-icon">🛒<span class="badge">3</span></span>
+          <span style="margin-left:6px;">购物车</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============================== 主体 ============================== -->
+<main class="container">
+
+  <div class="fn-tag">📍 F-U-020 商品列表 · F-U-021 分类导航 · F-U-022 关键词搜索 · F-U-023 多维筛选 · F-U-024 排序</div>
+
+  <!-- 面包屑 -->
+  <div class="breadcrumb">
+    <a href="home.html">首页</a>
+    <span class="sep">/</span>
+    <a href="product-list.html">零食</a>
+    <span class="sep">/</span>
+    <span class="current">搜索 "薯片"</span>
+  </div>
+
+  <div class="list-layout">
+    <!-- 左侧分类树 -->
+    <aside class="category-panel">
+      <h3>📂 全部分类</h3>
+
+      <div class="cat-group">
+        <div class="cat-title">🥜 坚果 <span class="arrow">▼</span></div>
+        <div class="cat-sub">腰果</div>
+        <div class="cat-sub">核桃</div>
+        <div class="cat-sub">开心果</div>
+        <div class="cat-sub">夏威夷果</div>
+      </div>
+      <div class="cat-group">
+        <div class="cat-title">🍬 糖果 <span class="arrow">▼</span></div>
+        <div class="cat-sub">软糖</div>
+        <div class="cat-sub">硬糖</div>
+        <div class="cat-sub">奶糖</div>
+      </div>
+      <div class="cat-group">
+        <div class="cat-title">🍟 膨化 <span class="arrow">▼</span></div>
+        <div class="cat-sub active">薯片</div>
+        <div class="cat-sub">虾条</div>
+        <div class="cat-sub">薯条</div>
+        <div class="cat-sub">锅巴</div>
+      </div>
+      <div class="cat-group">
+        <div class="cat-title">🥤 饮料 <span class="arrow">▼</span></div>
+        <div class="cat-sub">汽水</div>
+        <div class="cat-sub">果汁</div>
+        <div class="cat-sub">茶饮</div>
+      </div>
+      <div class="cat-group">
+        <div class="cat-title">🌶️ 辣条 <span class="arrow">▼</span></div>
+        <div class="cat-sub">辣片</div>
+        <div class="cat-sub">辣条</div>
+      </div>
+      <div class="cat-group">
+        <div class="cat-title">🍪 饼干 <span class="arrow">▼</span></div>
+        <div class="cat-sub">曲奇</div>
+        <div class="cat-sub">夹心饼干</div>
+      </div>
+      <div class="cat-group">
+        <div class="cat-title">🍰 糕点 <span class="arrow">▼</span></div>
+        <div class="cat-sub">蛋糕</div>
+        <div class="cat-sub">面包</div>
+      </div>
+      <div class="cat-group">
+        <div class="cat-title">🍫 巧克力 <span class="arrow">▼</span></div>
+        <div class="cat-sub">黑巧</div>
+        <div class="cat-sub">牛奶巧</div>
+      </div>
+      <div class="cat-group">
+        <div class="cat-title">🍿 爆米花</div>
+      </div>
+      <div class="cat-group">
+        <div class="cat-title">🎁 礼包组合</div>
+      </div>
+    </aside>
+
+    <!-- 右侧主区 -->
+    <div>
+      <!-- 排序 tabs -->
+      <div class="filter-bar">
+        <div class="sort-tabs">
+          <div class="sort-tab active">综合</div>
+          <div class="sort-tab">销量 ↓</div>
+          <div class="sort-tab">价格 ↑</div>
+          <div class="sort-tab">新品</div>
+        </div>
+        <span class="text-tertiary" style="font-size:13px;">共找到 <strong style="color:var(--primary);">328</strong> 件商品</span>
+      </div>
+
+      <!-- 品牌筛选 -->
+      <div class="filter-row">
+        <span class="label">品牌：</span>
+        <span class="tag-chip active">全部</span>
+        <span class="tag-chip">乐事</span>
+        <span class="tag-chip">上好佳</span>
+        <span class="tag-chip">好丽友</span>
+        <span class="tag-chip">可比克</span>
+        <span class="tag-chip">薯片先生</span>
+        <span class="tag-chip">良品铺子</span>
+        <label class="stock-toggle">
+          <input type="checkbox" checked> 仅看有货
+        </label>
+      </div>
+
+      <!-- 价格筛选 -->
+      <div class="filter-row">
+        <span class="label">价格：</span>
+        <span class="tag-chip">0-10</span>
+        <span class="tag-chip active">10-30</span>
+        <span class="tag-chip">30-50</span>
+        <span class="tag-chip">50-100</span>
+        <span class="tag-chip">100+</span>
+      </div>
+
+      <!-- 商品网格 4×3 = 12 -->
+      <div class="goods-grid-4" style="margin-top:16px;">
+        <div class="product-card">
+          <span class="fav-btn">🤍</span>
+          <div class="placeholder-img img-wrap"><span class="emoji">🍟</span><span class="label">乐事薯片</span></div>
+          <div class="info">
+            <div class="name">乐事薯片 原味 经典装 75g · 办公室零食</div>
+            <div class="price-row">
+              <span class="price">¥8.9<del>¥12.9</del></span>
+            </div>
+            <div class="meta"><span>月销 12.5k</span><span>评价 8.2k</span></div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <span class="fav-btn" style="color:var(--error);">❤️</span>
+          <div class="placeholder-img color-3 img-wrap"><span class="emoji">🍟</span><span class="label">黄瓜味</span></div>
+          <div class="info">
+            <div class="name">乐事薯片 黄瓜味 75g · 清爽解腻</div>
+            <div class="price-row"><span class="price">¥8.9<del>¥12.9</del></span></div>
+            <div class="meta"><span>月销 9.8k</span><span>评价 6.5k</span></div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <span class="fav-btn">🤍</span>
+          <div class="placeholder-img color-5 img-wrap"><span class="emoji">🌶️</span><span class="label">麻辣味</span></div>
+          <div class="info">
+            <div class="name">乐事薯片 麻辣香锅味 75g · 辣味十足</div>
+            <div class="price-row"><span class="price">¥9.5<del>¥13.9</del></span></div>
+            <div class="meta"><span>月销 7.2k</span><span>评价 4.8k</span></div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <span class="fav-btn">🤍</span>
+          <div class="placeholder-img color-2 img-wrap"><span class="emoji">🍟</span><span class="label">番茄味</span></div>
+          <div class="info">
+            <div class="name">乐事薯片 番茄味 75g · 酸甜可口</div>
+            <div class="price-row"><span class="price">¥8.9<del>¥12.9</del></span></div>
+            <div class="meta"><span>月销 6.1k</span><span>评价 3.9k</span></div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <span class="fav-btn">🤍</span>
+          <div class="placeholder-img color-6 img-wrap"><span class="emoji">🍟</span><span class="label">上好佳</span></div>
+          <div class="info">
+            <div class="name">上好佳鲜虾片 50g · 童年回忆</div>
+            <div class="price-row"><span class="price">¥3.5<del>¥5.0</del></span></div>
+            <div class="meta"><span>月销 15k</span><span>评价 9.2k</span></div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <span class="fav-btn" style="color:var(--error);">❤️</span>
+          <div class="placeholder-img color-8 img-wrap"><span class="emoji">🥔</span><span class="label">波浪薯片</span></div>
+          <div class="info">
+            <div class="name">乐事波浪薯片 烤牛排味 60g · 厚切酥脆</div>
+            <div class="price-row"><span class="price">¥6.9<del>¥9.9</del></span></div>
+            <div class="meta"><span>月销 5.4k</span><span>评价 3.1k</span></div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <span class="fav-btn">🤍</span>
+          <div class="placeholder-img color-4 img-wrap"><span class="emoji">🍟</span><span class="label">原味大包</span></div>
+          <div class="info">
+            <div class="name">乐事大薯片 原味 145g · 家庭分享装</div>
+            <div class="price-row"><span class="price">¥15.9<del>¥19.9</del></span></div>
+            <div class="meta"><span>月销 4.3k</span><span>评价 2.5k</span></div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <span class="fav-btn">🤍</span>
+          <div class="placeholder-img color-7 img-wrap"><span class="emoji">🌶️</span><span class="label">火辣味</span></div>
+          <div class="info">
+            <div class="name">可比克薯片 火辣味 60g · 辣味诱惑</div>
+            <div class="price-row"><span class="price">¥5.5<del>¥8.0</del></span></div>
+            <div class="meta"><span>月销 3.8k</span><span>评价 2.1k</span></div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <span class="fav-btn">🤍</span>
+          <div class="placeholder-img color-3 img-wrap"><span class="emoji">🥒</span><span class="label">清新黄瓜</span></div>
+          <div class="info">
+            <div class="name">好丽友薯片 黄瓜味 60g · 清新口感</div>
+            <div class="price-row"><span class="price">¥5.9<del>¥8.5</del></span></div>
+            <div class="meta"><span>月销 2.9k</span><span>评价 1.8k</span></div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <span class="fav-btn">🤍</span>
+          <div class="placeholder-img color-2 img-wrap"><span class="emoji">🍿</span><span class="label">原味</span></div>
+          <div class="info">
+            <div class="name">良品铺子 薯片 番茄味 100g</div>
+            <div class="price-row"><span class="price">¥12.9<del>¥16.9</del></span></div>
+            <div class="meta"><span>月销 1.6k</span><span>评价 980</span></div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <span class="fav-btn">🤍</span>
+          <div class="placeholder-img color-5 img-wrap"><span class="emoji">🥨</span><span class="label">芝士味</span></div>
+          <div class="info">
+            <div class="name">乐事无限 芝士味 104g · 罐装分享</div>
+            <div class="price-row"><span class="price">¥19.9<del>¥25.9</del></span></div>
+            <div class="meta"><span>月销 1.2k</span><span>评价 720</span></div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <span class="fav-btn">🤍</span>
+          <div class="placeholder-img color-6 img-wrap"><span class="emoji">🎁</span><span class="label">大礼包</span></div>
+          <div class="info">
+            <div class="name">乐事薯片大礼包 10 包混合装 · 节日送礼</div>
+            <div class="price-row"><span class="price">¥39.9<del>¥59.9</del></span></div>
+            <div class="meta"><span>月销 8.5k</span><span>评价 5.6k</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 分页 -->
+      <div class="pagination">
+        <span class="page disabled">‹ 上一页</span>
+        <span class="page active">1</span>
+        <span class="page">2</span>
+        <span class="page">3</span>
+        <span class="page">4</span>
+        <span class="page">5</span>
+        <span class="page">...</span>
+        <span class="page">12</span>
+        <span class="page">下一页 ›</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ============================== Footer ============================== -->
+<footer class="footer">
+  <div class="container">
+    <div>
+      <h4>🥨 麦乐迪零食</h4>
+      <p style="opacity:0.7; line-height:1.8; margin-top:8px;">让零食购物像逛便利店一样简单</p>
+      <p style="opacity:0.5; margin-top:12px; font-size:12px;">© 2026 Maledi Snack · 毕业设计演示项目</p>
+    </div>
+    <div>
+      <h4>购物指南</h4>
+      <ul>
+        <li><a>购物流程</a></li>
+        <li><a>常见问题</a></li>
+        <li><a>联系客服</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>配送与支付</h4>
+      <ul>
+        <li><a>配送方式</a></li>
+        <li><a>支付方式</a></li>
+        <li><a>发票信息</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>会员中心</h4>
+      <ul>
+        <li><a>成长值规则</a></li>
+        <li><a>优惠券说明</a></li>
+        <li><a>积分商城</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>关于我们</h4>
+      <ul>
+        <li><a>公司简介</a></li>
+        <li><a>团队介绍</a></li>
+        <li><a>加入我们</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
