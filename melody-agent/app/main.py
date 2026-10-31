@@ -27,6 +27,17 @@ logging.basicConfig(level=logging.INFO,
 log = logging.getLogger("melody-agent")
 
 app = FastAPI(title="麦乐迪智能购物助手", version="1.0.0")
+
+# 售后多 Agent（LangGraph）按需加载：本地 Python 3.14 venv 没装 langgraph 时，
+# 原有导购助手仍可正常启动；Docker / Python 3.11+ 环境会自动启用。
+if settings.after_sale_enabled:
+    try:
+        from .after_sales.api import router as after_sales_router
+        app.include_router(after_sales_router)
+        log.info("[after-sales] LangGraph router enabled")
+    except Exception as e:  # noqa: BLE001
+        log.warning("[after-sales] disabled (langgraph not installed?): %s", e)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins or ["*"],

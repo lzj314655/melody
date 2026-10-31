@@ -63,6 +63,7 @@
 | ⭐ 商品评价 | 仅购买过可评价、一人一评防重、评分自动回写商品 |
 | 🎯 个性化推荐 | 基于浏览 / 加购 / 购买行为的 **ItemCF 协同过滤**，Redis 缓存 + 定时预热 |
 | 🤖 AI 购物助手 | 右下角悬浮客服：查价 / 加购 / 下单 / 规则问答（RAG），见[下文](#-ai-智能购物助手) |
+| 🧾 售后工单 | 退款/投诉多 Agent：意图识别 → 订单物流 → 风控 → 政策 → 自动退款/转人工 |
 
 **管理后台（Admin）**
 
@@ -73,6 +74,7 @@
 | 🧾 订单管理 | 全状态筛选、一键发货、退款审核、订单详情时间线 |
 | 👥 用户管理 | 会员等级筛选、赠送积分、冻结 / 解锁 |
 | 📣 营销管理 | 优惠券创建 / 停用 / 删除，实时剩余量 |
+| 🧾 售后工作台 | 售后工单列表 / 详情，高风险工单人工审核（通过退款 / 拒绝） |
 | 🔐 系统管理 | RBAC 管理员账号、操作日志审计、新订单 SSE 实时弹窗 |
 
 ---
@@ -128,9 +130,10 @@ LLM 须向用户完整展示摘要、获得确认后原参数重调，且购物�
 > 前置：Docker Desktop 已启动。首次构建约 5–15 分钟（已配国内镜像源）。
 
 ```bash
-# 1. 准备环境变量（填入 DeepSeek API Key，AI 助手用）
+# 1. 准备环境变量（填入 DeepSeek API Key 和 JWT_SECRET）
 cp .env.docker.example .env.docker
 #    编辑 .env.docker → DEEPSEEK_API_KEY=sk-xxxx
+#                      → JWT_SECRET=（至少 32 位随机字符串，可用 openssl rand -base64 36）
 
 # 2. 构建并启动全部 5 个容器（MySQL 首次启动自动建库 + 导入演示数据）
 docker compose --env-file .env.docker up -d --build
@@ -158,14 +161,18 @@ mysql -u root -p melody_shop < backend/sql/order-alipay-columns.sql
 mysql -u root -p melody_shop < backend/sql/insert-50-new-products.sql
 mysql -u root -p melody_shop < backend/sql/wallet-recharge-order.sql
 mysql -u root -p melody_shop < backend/sql/migrate-to-local-images.sql
+mysql -u root -p melody_shop < backend/sql/after-sales-tables.sql
 
-# 2. 后端（会自动读取 gitignored 的 application-local.yml 中的本地密码/支付宝密钥）
-cd backend && mvn spring-boot:run        # :8080
+# 2. 后端（读取 gitignored 的 application-local.yml 中的本地密码/JWT/支付宝密钥）
+cd backend
+copy src\main\resources\application-local.yml.example src\main\resources\application-local.yml
+#    编辑 application-local.yml：MySQL 密码、JWT_SECRET、AFTER_SALE_INTERNAL_TOKEN、支付宝沙箱密钥
+mvn spring-boot:run                      # :8080
 
-# 3. AI 助手
+# 3. AI 助手（售后 LangGraph 模块需 Python 3.11/3.12/3.13，暂不支持 3.14）
 cd melody-agent
 python -m venv venv && venv\Scripts\pip install -r requirements.txt
-copy .env.example .env                   # 填入 DEEPSEEK_API_KEY
+copy .env.example .env                   # 填入 DEEPSEEK_API_KEY、AFTER_SALE_INTERNAL_TOKEN
 venv\Scripts\python scripts\build_kb.py  # 构建 RAG 向量库（首次自动下载 24MB 模型）
 venv\Scripts\python run.py               # :8100
 
@@ -204,6 +211,35 @@ cd frontend_google1 && npm install && npm run dev   # :3000
 技术要点：会话上下文 MySQL 持久化（含全部工具调用链审计）、SSE 流式输出、滑动窗口上下文、
 向量模型 `bge-small-zh-v1.5 int8`（本地 ONNX 推理，免 API Key）。
 
+## 🧾 售后多 Agent（LangGraph）
+
+用户发起退款/投诉后，由 LangGraph 编排一条**决策流水线**，而不是让 5 个 Agent 自由聊天：
+
+```text
+意图识别 → 订单/物流查询 → 风控评分 ∥ 政策检索 → 决策层 → 自动退款 / 转人工 → 回复
+```
+
+| 节点 | 实现 | 输出 |
+|------|------|------|
+| 意图识别 | LLM 结构化输出 + 规则兜底 | LOGISTICS / QUALITY / REFUND / MALICIOUS / OTHER + 订单号 |
+| 订单/物流 | 确定性工具调用 | 订单状态、实付、物流单号与轨迹 |
+| 风控 | Java 内部接口 + 规则评分 | 退款率、退款次数、账号年龄、黑名单、同商品重复退款 |
+| 政策 | Markdown 政策库检索 + 确定性校验 | ELIGIBLE / NEED_EVIDENCE / INELIGIBLE / MANUAL + 条款来源 |
+| 决策 | 确定性规则，不由 LLM 决定 | 低风险 + 可退 + 金额 ≤ 200 自动；高风险/大额/证据不足转人工 |
+| 回复 | LLM 只做话术润色，事实来自模板 | 结论、退款金额、工单号、下一步 |
+
+关键设计：
+
+- **决策与退款分离**：LLM 只负责理解和表达，退款由决策规则 + Java 订单状态二次校验兜底；
+- **人工接管**：高风险工单写入 `PENDING_REVIEW`，后台审核通过后才调用退款；
+- **全链路审计**：`t_after_sale_ticket` + `t_after_sale_event` 记录每个 Agent 节点的事实与决策；
+- **内部接口鉴权**：Python → Java 走 `X-After-Sale-Token`，不对公网暴露；
+- **离线可跑**：无 LLM Key 时意图/回复自动降级为规则和模板，smoke 测试不依赖外网。
+
+接口：Agent 服务 `POST /api/after-sales/chat`（SSE）、`GET /api/after-sales/tickets/{id}`；
+Docker 下经 nginx 访问为 `/agent/api/after-sales/chat`。
+后台：`/api/admin/after-sales/list`、`/{id}/decision`。
+
 ## 📸 界面速览
 
 | 商品列表 | 管理后台 · 商品管理 |
@@ -232,7 +268,8 @@ melody/
 │   └── Dockerfile           # node 构建 → nginx 托管
 ├── melody-agent/            # Python AI 智能助手
 │   ├── app/                 # agent 循环 / 工具集 / RAG / MySQL 持久化
-│   ├── knowledge/           # 6 篇平台规则知识文档（RAG 语料）
+│   │   └── after_sales/     # 售后多 Agent（LangGraph：意图/风控/政策/决策）
+│   ├── knowledge/           # 平台规则 + 售后政策（RAG 语料）
 │   ├── scripts/             # 建库 / 冒烟测试
 │   └── Dockerfile
 ├── 项目测试/                 # 独立测试工程（L1 API / L2 鉴权矩阵 / L3 集成 / L4 UAT）

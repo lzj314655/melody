@@ -249,12 +249,30 @@ class CouponServiceImplTest {
         uc.setStatus("可用");
         uc.setExpireAt(LocalDateTime.now().plusDays(30));
         when(userCouponMapper.selectById(1L)).thenReturn(uc);
+        when(userCouponMapper.markUsed(1L, 1L, 999L)).thenReturn(1);
 
         couponService.consume(1L, 1L, 999L);
 
         assertThat(uc.getStatus()).isEqualTo("已用");
         assertThat(uc.getUsedOrderId()).isEqualTo(999L);
-        verify(userCouponMapper).updateById(uc);
+        verify(userCouponMapper).markUsed(1L, 1L, 999L);
+    }
+
+    @Test
+    @DisplayName("consume 并发抢同一张券 → 原子更新失败，第二单拒绝")
+    void consume_raceLost() {
+        TUserCoupon uc = new TUserCoupon();
+        uc.setId(1L);
+        uc.setUserId(1L);
+        uc.setCouponId(100L);
+        uc.setStatus("可用");
+        uc.setExpireAt(LocalDateTime.now().plusDays(30));
+        when(userCouponMapper.selectById(1L)).thenReturn(uc);
+        when(userCouponMapper.markUsed(1L, 1L, 999L)).thenReturn(0);
+
+        assertThatThrownBy(() -> couponService.consume(1L, 1L, 999L))
+                .isInstanceOf(BizException.class)
+                .satisfies(ex -> assertThat(((BizException) ex).getCode()).isEqualTo(ResultCode.BAD_REQUEST.getCode()));
     }
 
     @Test

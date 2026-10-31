@@ -100,18 +100,34 @@ const handleRecharge = async () => {
     alert("单次充值金额不得超过 ￥100,000");
     return;
   }
+  // 必须在用户点击的同步上下文里先开窗口，await 之后浏览器会拦截弹窗
+  const payWin = window.open("", "_blank");
+  if (!payWin) {
+    alert("浏览器拦截了支付窗口，请允许弹窗后重试");
+    return;
+  }
   rechargeSubmitting.value = true;
   try {
-    // 演示环境：已去掉支付宝沙箱支付，充值直接到账
-    await createRechargeApi(amount);
+    // 创建支付宝充值单（服务端生成支付表单，钱不会直接入账）
+    const order = await createRechargeApi(amount);
     closeRechargeModal();
-    // 刷新余额显示
-    try {
-      const w = await fetchWalletBalance();
-      walletBalance.value = Number(w?.balance ?? 0);
-    } catch {}
-    alert(`充值成功！已到账 ￥${amount.toFixed(2)}`);
+
+    if (!order?.payForm) {
+      payWin.close();
+      alert("创建充值单失败：服务端未返回支付表单");
+      return;
+    }
+
+    payWin.document.write(order.payForm);
+    payWin.document.close();
+
+    // 跳到结果页轮询，付款成功后自动刷新余额
+    router.push({
+      path: "/recharge-result",
+      query: { out_trade_no: order.outTradeNo, amount },
+    });
   } catch (e) {
+    payWin.close();
     alert("充值失败：" + e.message);
   } finally {
     rechargeSubmitting.value = false;

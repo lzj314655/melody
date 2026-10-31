@@ -96,6 +96,18 @@ class OrderFlowIntegrationTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
+    @Test
+    @DisplayName("游客可访问推荐与商品评价（SecurityConfig 放行 + 不再被 401 拦截）")
+    void guestCanBrowseRecommendAndReview() throws Exception {
+        mockMvc.perform(get("/api/recommend/cold-start").param("limit", "4"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+
+        mockMvc.perform(get("/api/review/product/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
     private String extractDataField(MvcResult result, String field) throws Exception {
         Map<String, Object> data = objectMapper.readValue(
                 objectMapper.writeValueAsString(
@@ -156,8 +168,6 @@ class OrderFlowIntegrationTest {
         addReq.setProductId(1L);
         addReq.setSkuId(sku.getId());
         addReq.setQuantity(2);
-        addReq.setPrice(new java.math.BigDecimal("10.00"));
-        addReq.setSpecName("默认");
 
         mockMvc.perform(post("/api/cart")
                         .contentType(MediaType.APPLICATION_JSON)

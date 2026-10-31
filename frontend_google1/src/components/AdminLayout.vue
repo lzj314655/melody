@@ -17,6 +17,7 @@ import {
   ShoppingCart,
   UserPlus,
   AlertTriangle,
+  ShieldAlert,
   Tag
 } from "lucide-vue-next";
 import { setAdminToken } from "@/api/http";
@@ -57,6 +58,7 @@ const menuItems = [
   { path: "/admin/products", label: "商品管理", icon: Package },
   { path: "/admin/categories", label: "分类管理", icon: FolderTree },
   { path: "/admin/orders", label: "订单管理", icon: ShoppingBag },
+  { path: "/admin/after-sales", label: "售后工作台", icon: ShieldAlert },
   { path: "/admin/coupons", label: "营销管理", icon: Megaphone },
   { path: "/admin/users", label: "用户管理", icon: Users },
   { path: "/admin/settings", label: "系统设置", icon: Settings },

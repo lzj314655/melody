@@ -34,8 +34,14 @@ public interface IOrderService {
     /** 后台：退款审核通过（AFTER_SALE → REFUNDED） */
     void approveRefund(Long orderId);
 
-    /** 查询 */
+    /** 后台/内部查询：不校验归属（调用方自行确认权限） */
     TOrder getById(Long orderId);
+
+    /** 前台查询：按 id + 当前用户校验归属，越权抛 FORBIDDEN */
+    TOrder getByIdForUser(Long orderId, Long userId);
+
+    /** 前台查询：按订单号 + 当前用户校验归属（售后对话里用户常只报订单号） */
+    TOrder getByOrderNoForUser(String orderNo, Long userId);
 
     List<TOrder> listByUser(Long userId, String status);
 

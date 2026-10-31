@@ -111,14 +111,14 @@ export const fetchWalletLogs = async () => {
   return await http.get("/wallet/logs");
 };
 
-// ========== 钱包充值（演示环境直接到账，已去掉支付宝沙箱支付） ==========
+// ========== 钱包充值（支付宝沙箱） ==========
 
-// 充值：后端直接入账并返回最新钱包账户
+// 创建充值单：返回 { outTradeNo, payForm }，前端新窗口打开 payForm 付款
 export const createRechargeApi = async (amount) => {
   return await http.post("/wallet/recharge", null, { params: { amount } });
 };
 
-// 保留：RechargeResultView 仍引用（沙箱充值流程已废弃，页面无入口，属死代码）
+// 轮询充值结果：PAID 时返回最新余额，由支付宝异步通知/主动查询入账
 export const queryRechargeApi = async (outTradeNo) => {
   return await http.get("/wallet/recharge/query", { params: { outTradeNo } });
 };

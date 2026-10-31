@@ -67,6 +67,14 @@ services:
       ALIPAY_APP_ID: ${ALIPAY_APP_ID:-}
       ALIPAY_PRIVATE_KEY: ${ALIPAY_PRIVATE_KEY:-}
       ALIPAY_PUBLIC_KEY: ${ALIPAY_PUBLIC_KEY:-}
+      # 回跳走宿主机前端 3000（application.yml 默认值即可）；
+      # 异步通知走宿主机映射的后端端口 8081
+      ALIPAY_NOTIFY_URL: ${ALIPAY_NOTIFY_URL:-http://localhost:8081/api/wallet/recharge/notify}
+      ALIPAY_ORDER_NOTIFY_URL: ${ALIPAY_ORDER_NOTIFY_URL:-http://localhost:8081/api/order/alipay/notify}
+      # 必填：JWT 签名密钥（至少 32 字节），缺失时 compose 直接报错
+      JWT_SECRET: ${JWT_SECRET:?请在 .env.docker 中设置 JWT_SECRET（至少 32 位随机字符串）}
+      # Python 售后 Agent 调用内部接口的共享令牌
+      AFTER_SALE_INTERNAL_TOKEN: ${AFTER_SALE_INTERNAL_TOKEN:?请在 .env.docker 中设置 AFTER_SALE_INTERNAL_TOKEN}
       SPRING_PROFILES_ACTIVE: docker
     volumes:
       - ./image:/app/image:ro   # 商品图片
@@ -100,6 +108,8 @@ services:
       DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
       DB_NAME: melody_shop
       PORT: "8100"
+      # 售后 LangGraph 调用 Java 内部接口
+      AFTER_SALE_INTERNAL_TOKEN: ${AFTER_SALE_INTERNAL_TOKEN:?请在 .env.docker 中设置 AFTER_SALE_INTERNAL_TOKEN}
     # 向量模型缓存 + 向量库持久化（首次构建后离线可用）
     volumes:
       - agent-data:/app/data

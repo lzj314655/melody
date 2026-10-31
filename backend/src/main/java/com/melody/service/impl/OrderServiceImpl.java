@@ -38,7 +38,9 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
@@ -81,26 +83,47 @@ public class OrderServiceImpl implements IOrderService {
         if (u.getStatus() != null && u.getStatus() == 0) {
             throw new BizException(ResultCode.FORBIDDEN, "账号已被冻结，无法下单");
         }
-        // 取购物车项
+        // 取购物车项（只保留本人的，且必须至少剩一条）
         List<TCartItem> items = cartMapper.selectBatchIds(cartItemIds);
-        if (items.isEmpty()) throw new BizException(ResultCode.CART_EMPTY);
         items.removeIf(i -> !i.getUserId().equals(userId));
+        if (items.isEmpty()) throw new BizException(ResultCode.CART_EMPTY);
 
-        // 算金额 + 校验库存 + 生成订单明细
+        // 算金额 + 校验库存：单价一律以数据库中的 SKU / 商品现价为准，
+        // 不信任购物车里的 price 快照（防止前端篡改或历史脏数据）。
         BigDecimal goodsAmount = BigDecimal.ZERO;
+        Map<Long, TProductSku> skuByItem = new HashMap<>();
+        Map<Long, BigDecimal> unitPriceByItem = new HashMap<>();
         for (TCartItem ci : items) {
+            if (ci.getQuantity() == null || ci.getQuantity() <= 0) {
+                throw new BizException(ResultCode.BAD_REQUEST, "购买数量不合法");
+            }
             TProduct p = productMapper.selectById(ci.getProductId());
-            if (p == null || p.getStatus() != 1) {
+            if (p == null || p.getStatus() == null || p.getStatus() != 1) {
                 throw new BizException(ResultCode.PRODUCT_OFF_SHELF, "商品已下架");
             }
+            BigDecimal unitPrice;
             if (ci.getSkuId() != null) {
                 TProductSku sku = skuMapper.selectById(ci.getSkuId());
-                if (sku == null || sku.getStock() < ci.getQuantity()) {
+                if (sku == null || sku.getStatus() == null || sku.getStatus() != 1
+                        || !ci.getProductId().equals(sku.getProductId())) {
+                    throw new BizException(ResultCode.BAD_REQUEST, "商品规格不存在或与商品不匹配");
+                }
+                if (sku.getStock() == null || sku.getStock() < ci.getQuantity()) {
                     throw new BizException(ResultCode.PRODUCT_OUT_OF_STOCK);
                 }
+                unitPrice = sku.getPrice();
+                skuByItem.put(ci.getId(), sku);
+            } else {
+                if (p.getInventory() == null || p.getInventory() < ci.getQuantity()) {
+                    throw new BizException(ResultCode.PRODUCT_OUT_OF_STOCK);
+                }
+                unitPrice = p.getPrice();
             }
-            BigDecimal lineTotal = ci.getPrice().multiply(BigDecimal.valueOf(ci.getQuantity()));
-            goodsAmount = goodsAmount.add(lineTotal);
+            if (unitPrice == null) {
+                throw new BizException(ResultCode.BAD_REQUEST, "商品价格异常");
+            }
+            unitPriceByItem.put(ci.getId(), unitPrice);
+            goodsAmount = goodsAmount.add(unitPrice.multiply(BigDecimal.valueOf(ci.getQuantity())));
         }
 
         // 优惠券
@@ -110,6 +133,9 @@ public class OrderServiceImpl implements IOrderService {
             uc = userCouponMapper.selectById(userCouponId);
             if (uc == null || !"可用".equals(uc.getStatus())) {
                 throw new BizException(ResultCode.BAD_REQUEST, "优惠券不可用");
+            }
+            if (!uc.getUserId().equals(userId)) {
+                throw new BizException(ResultCode.FORBIDDEN, "无权使用他人优惠券");
             }
             TCoupon c = couponMapper.selectById(uc.getCouponId());
             if (c == null || goodsAmount.compareTo(c.getMinSpend()) < 0) {
@@ -135,19 +161,22 @@ public class OrderServiceImpl implements IOrderService {
             totalPrice = MIN_PRICE;
         }
 
-        // 扣库存
+        // 扣库存：必须走带 stock >= qty 条件的原子 SQL，避免并发下单超卖。
         for (TCartItem ci : items) {
-            if (ci.getSkuId() != null) {
-                TProductSku sku = skuMapper.selectById(ci.getSkuId());
-                sku.setStock(sku.getStock() - ci.getQuantity());
-                sku.setSales((sku.getSales() == null ? 0 : sku.getSales()) + ci.getQuantity());
-                skuMapper.updateById(sku);
-            }
-            TProduct p = productMapper.selectById(ci.getProductId());
-            if (p != null) {
-                p.setSales((p.getSales() == null ? 0 : p.getSales()) + ci.getQuantity());
-                p.setInventory((p.getInventory() == null ? 0 : p.getInventory()) - ci.getQuantity());
-                productMapper.updateById(p);
+            int qty = ci.getQuantity();
+            TProductSku sku = skuByItem.get(ci.getId());
+            if (sku != null) {
+                if (skuMapper.deductStock(sku.getId(), qty) != 1) {
+                    throw new BizException(ResultCode.PRODUCT_OUT_OF_STOCK);
+                }
+                productMapper.addSales(ci.getProductId(), qty);
+                // 商品表 inventory 是 SKU 库存之和的冗余字段，扣完按 SKU 重算
+                productMapper.syncInventoryFromSkus(ci.getProductId());
+            } else {
+                if (productMapper.deductInventory(ci.getProductId(), qty) != 1) {
+                    throw new BizException(ResultCode.PRODUCT_OUT_OF_STOCK);
+                }
+                productMapper.addSales(ci.getProductId(), qty);
             }
         }
 
@@ -191,9 +220,10 @@ public class OrderServiceImpl implements IOrderService {
             walletService.pay(userId, totalPrice, order.getId());
         }
 
-        // 写明细
+        // 写明细（价格使用服务端实时价）
         for (TCartItem ci : items) {
             TProduct p = productMapper.selectById(ci.getProductId());
+            BigDecimal unitPrice = unitPriceByItem.get(ci.getId());
             TOrderItem oi = new TOrderItem();
             oi.setOrderId(order.getId());
             oi.setProductId(ci.getProductId());
@@ -201,9 +231,9 @@ public class OrderServiceImpl implements IOrderService {
             oi.setProductName(p.getName());
             oi.setProductImage(p.getCoverImage());
             oi.setSpecName(ci.getSpecName());
-            oi.setPrice(ci.getPrice());
+            oi.setPrice(unitPrice);
             oi.setQuantity(ci.getQuantity());
-            oi.setSubtotal(ci.getPrice().multiply(BigDecimal.valueOf(ci.getQuantity())));
+            oi.setSubtotal(unitPrice.multiply(BigDecimal.valueOf(ci.getQuantity())));
             orderItemMapper.insert(oi);
         }
 
@@ -263,41 +293,41 @@ public class OrderServiceImpl implements IOrderService {
 
     private void addPointsAndGrowth(Long userId, Long orderId, BigDecimal totalPrice) {
         int delta = totalPrice.intValue(); // 1 元 = 1 积分 = 1 成长值
+        TUser u = userMapper.selectById(userId);
+        if (u == null) return;
 
-        // 1) 写流水 + 累加 t_user.points
+        int newPoints = (u.getPoints() == null ? 0 : u.getPoints()) + delta;
+        int newGrowth = (u.getGrowthValue() == null ? 0 : u.getGrowthValue()) + delta;
+
+        // 1) 积分流水：balance_after 必须写累计余额，而不是本次增量
         TPointLog pl = new TPointLog();
         pl.setUserId(userId);
         pl.setChangeAmount(delta);
-        pl.setBalanceAfter(delta); // 简化：演示数据流式余额
+        pl.setBalanceAfter(newPoints);
         pl.setType("ORDER");
         pl.setReason("订单完成赠送积分");
         pl.setRelatedOrderId(orderId);
         pointLogMapper.insert(pl);
 
-        // 2) 写流水 + 累加 t_user.growth_value
+        // 2) 成长值流水
         TGrowthLog gl = new TGrowthLog();
         gl.setUserId(userId);
         gl.setChangeAmount(delta);
-        gl.setBalanceAfter(delta);
+        gl.setBalanceAfter(newGrowth);
         gl.setType("ORDER");
         gl.setReason("订单完成累计成长值");
         gl.setRelatedOrderId(orderId);
         growthLogMapper.insert(gl);
 
         // 3) 同步累加 t_user 字段，并按 PRD §7.5 阈值自动升档
-        TUser u = userMapper.selectById(userId);
-        if (u != null) {
-            int newPoints = (u.getPoints() == null ? 0 : u.getPoints()) + delta;
-            int newGrowth = (u.getGrowthValue() == null ? 0 : u.getGrowthValue()) + delta;
-            String newRank = computeRank(newGrowth);
-            u.setPoints(newPoints);
-            u.setGrowthValue(newGrowth);
-            if (newRank != null && !newRank.equals(u.getRankCode())) {
-                log.info("[Rank] userId={} {} -> {} (growth={})", userId, u.getRankCode(), newRank, newGrowth);
-                u.setRankCode(newRank);
-            }
-            userMapper.updateById(u);
+        String newRank = computeRank(newGrowth);
+        u.setPoints(newPoints);
+        u.setGrowthValue(newGrowth);
+        if (newRank != null && !newRank.equals(u.getRankCode())) {
+            log.info("[Rank] userId={} {} -> {} (growth={})", userId, u.getRankCode(), newRank, newGrowth);
+            u.setRankCode(newRank);
         }
+        userMapper.updateById(u);
     }
 
     /** PRD §7.5: 0-499 V0 / 500-1999 V1 / 2000-4999 V2 / 5000+ V3 */
@@ -327,10 +357,17 @@ public class OrderServiceImpl implements IOrderService {
         if (!"PENDING_PAY".equals(o.getStatus())) {
             throw new BizException(ResultCode.ORDER_STATUS_INVALID, "仅待付款订单可取消");
         }
+        // 原子流转，避免两个并发取消请求都把库存回滚一遍
+        int affected = orderMapper.markCanceled(orderId);
+        if (affected != 1) {
+            throw new BizException(ResultCode.ORDER_STATUS_INVALID, "订单状态已变化，请刷新后重试");
+        }
         o.setStatus("CANCELED");
-        orderMapper.updateById(o);
-        // 回滚库存
+        // 未付款订单取消：回滚库存 + 退回优惠券
         rollbackStock(o);
+        if (o.getCouponId() != null) {
+            couponService.releaseByOrder(userId, orderId);
+        }
         log.info("[Order] canceled orderId={}", orderId);
     }
 
@@ -388,15 +425,42 @@ public class OrderServiceImpl implements IOrderService {
         if (!"AFTER_SALE".equals(o.getStatus())) {
             throw new BizException(ResultCode.ORDER_STATUS_INVALID, "仅售后中订单可审核");
         }
+        // 原子流转：两个管理员同时点“通过”时只有一笔能进入退款
+        int affected = orderMapper.markRefunded(orderId);
+        if (affected != 1) {
+            throw new BizException(ResultCode.ORDER_STATUS_INVALID, "订单状态已变化，请刷新后重试");
+        }
         walletService.refund(o.getUserId(), o.getTotalPrice(), orderId);
         o.setStatus("REFUNDED");
-        orderMapper.updateById(o);
         // PRD §7.2: COMPLETED 状态退款不回滚库存（已发货），这里演示同样不回滚
     }
 
     @Override
     public TOrder getById(Long orderId) {
         return mustOrder(orderId);
+    }
+
+    @Override
+    public TOrder getByIdForUser(Long orderId, Long userId) {
+        TOrder o = mustOrder(orderId);
+        if (!o.getUserId().equals(userId)) {
+            throw new BizException(ResultCode.FORBIDDEN, "无权查看该订单");
+        }
+        return o;
+    }
+
+    @Override
+    public TOrder getByOrderNoForUser(String orderNo, Long userId) {
+        if (orderNo == null || orderNo.isBlank()) {
+            throw new BizException(ResultCode.BAD_REQUEST, "订单号不能为空");
+        }
+        TOrder o = orderMapper.selectOne(new LambdaQueryWrapper<TOrder>()
+                .eq(TOrder::getOrderNo, orderNo));
+        if (o == null) throw new BizException(ResultCode.ORDER_NOT_FOUND);
+        if (!o.getUserId().equals(userId)) {
+            throw new BizException(ResultCode.FORBIDDEN, "无权查看该订单");
+        }
+        return o;
     }
 
     @Override
@@ -431,19 +495,12 @@ public class OrderServiceImpl implements IOrderService {
                 .eq(TOrderItem::getOrderId, order.getId()));
         for (TOrderItem oi : items) {
             if (oi.getSkuId() != null) {
-                TProductSku sku = skuMapper.selectById(oi.getSkuId());
-                if (sku != null) {
-                    sku.setStock(sku.getStock() + oi.getQuantity());
-                    sku.setSales(Math.max(0, (sku.getSales() == null ? 0 : sku.getSales()) - oi.getQuantity()));
-                    skuMapper.updateById(sku);
-                }
+                skuMapper.restoreStock(oi.getSkuId(), oi.getQuantity());
+                productMapper.syncInventoryFromSkus(oi.getProductId());
+            } else {
+                productMapper.restoreInventory(oi.getProductId(), oi.getQuantity());
             }
-            TProduct p = productMapper.selectById(oi.getProductId());
-            if (p != null) {
-                p.setSales(Math.max(0, (p.getSales() == null ? 0 : p.getSales()) - oi.getQuantity()));
-                p.setInventory((p.getInventory() == null ? 0 : p.getInventory()) + oi.getQuantity());
-                productMapper.updateById(p);
-            }
+            productMapper.subtractSales(oi.getProductId(), oi.getQuantity());
         }
     }
 }

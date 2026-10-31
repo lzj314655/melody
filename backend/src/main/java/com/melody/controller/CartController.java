@@ -30,8 +30,7 @@ public class CartController {
     @PostMapping
     public R<TCartItem> add(@Valid @RequestBody CheckoutDTOs.CartAddRequest req) {
         return R.ok(cartService.add(SecurityUtils.currentId(),
-                req.getProductId(), req.getSkuId(), req.getQuantity(),
-                req.getPrice(), req.getSpecName()));
+                req.getProductId(), req.getSkuId(), req.getQuantity()));
     }
 
     @PutMapping("/{productId}/{skuId}")

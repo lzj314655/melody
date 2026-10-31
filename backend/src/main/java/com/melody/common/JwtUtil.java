@@ -25,7 +25,11 @@ import java.util.List;
 @Component
 public class JwtUtil {
 
-    @Value("${melody.jwt.secret:melody-shop-default-secret-key-please-change-in-production-32bytes}")
+    /**
+     * 必须由环境变量 / application-local.yml 注入，禁止在代码里写默认值。
+     * 启动时校验长度，避免用弱密钥签发 JWT。
+     */
+    @Value("${melody.jwt.secret}")
     private String secret;
 
     /** Token 有效期 7 天（PRD §5.2） */
@@ -35,12 +39,15 @@ public class JwtUtil {
 
     @PostConstruct
     public void init() {
-        // JJWT 0.12 要求 key 至少 256 bit（32 字节）
+        // JJWT 0.12 / HS256 要求 key 至少 256 bit（32 字节）
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                    "缺少 JWT 密钥：请设置环境变量 JWT_SECRET（或 application-local.yml 的 melody.jwt.secret）");
+        }
         byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
         if (bytes.length < 32) {
-            byte[] padded = new byte[32];
-            System.arraycopy(bytes, 0, padded, 0, bytes.length);
-            bytes = padded;
+            throw new IllegalStateException(
+                    "JWT_SECRET 太短：至少需要 32 字节，当前 " + bytes.length + " 字节");
         }
         this.key = Keys.hmacShaKeyFor(bytes);
     }

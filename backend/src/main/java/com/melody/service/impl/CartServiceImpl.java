@@ -64,21 +64,26 @@ public class CartServiceImpl implements ICartService {
 
     @Override
     @Transactional
-    public TCartItem add(Long userId, Long productId, Long skuId,
-                          Integer quantity, BigDecimal price, String specName) {
+    public TCartItem add(Long userId, Long productId, Long skuId, Integer quantity) {
         if (quantity == null || quantity <= 0) {
             throw new BizException(ResultCode.BAD_REQUEST, "数量必须大于 0");
         }
-        // 若前端没传 price/specName，自动按 skuId 补
-        if (price == null || specName == null) {
-            TProductSku sku = skuMapper.selectById(skuId);
-            if (sku != null) {
-                if (price == null) price = sku.getPrice();
-                if (specName == null) specName = sku.getSpecName();
-            }
+        // 价格与规格名一律以数据库为准，忽略任何客户端传值
+        TProduct product = productMapper.selectById(productId);
+        if (product == null || product.getStatus() == null || product.getStatus() != 1) {
+            throw new BizException(ResultCode.PRODUCT_OFF_SHELF, "商品不存在或已下架");
         }
+        TProductSku sku = skuMapper.selectById(skuId);
+        if (sku == null || sku.getStatus() == null || sku.getStatus() != 1) {
+            throw new BizException(ResultCode.BAD_REQUEST, "规格不存在或已下架");
+        }
+        if (!productId.equals(sku.getProductId())) {
+            throw new BizException(ResultCode.BAD_REQUEST, "规格与商品不匹配");
+        }
+        BigDecimal price = sku.getPrice();
+        String specName = sku.getSpecName();
         if (price == null) {
-            throw new BizException(ResultCode.BAD_REQUEST, "价格快照缺失，请稍后再试");
+            throw new BizException(ResultCode.BAD_REQUEST, "商品价格异常，请稍后再试");
         }
         TCartItem exist = cartMapper.selectOne(new LambdaQueryWrapper<TCartItem>()
                 .eq(TCartItem::getUserId, userId)

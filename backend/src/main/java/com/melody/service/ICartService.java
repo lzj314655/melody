@@ -12,7 +12,10 @@ public interface ICartService {
 
     List<CartItemVO> list(Long userId);
 
-    TCartItem add(Long userId, Long productId, Long skuId, Integer quantity, java.math.BigDecimal price, String specName);
+    /**
+     * 加入购物车。价格 / 规格名由服务端按 skuId 查询，客户端只传商品、规格和数量。
+     */
+    TCartItem add(Long userId, Long productId, Long skuId, Integer quantity);
 
     void updateQuantity(Long userId, Long productId, Long skuId, Integer quantity);
 

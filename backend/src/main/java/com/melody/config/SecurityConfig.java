@@ -63,11 +63,16 @@ public class SecurityConfig {
                     "/api/coupon/available",
                     "/api/banner/list",
                     "/api/announcement/list",
+                    // 游客也要能看推荐与商品评价；写操作在 Controller/Service 内部自行校验登录态
+                    "/api/recommend/**",
+                    "/api/review/**",
                     // 后台实时通知 SSE 流（事件仅含提示信息，无订单明细）
                     "/api/notify/stream",
                     // 支付宝异步通知（沙箱本地打不到，部署后生效；必须公开，无 JWT）
                     "/api/wallet/recharge/notify",
                     "/api/order/alipay/notify",
+                    // 内部服务接口：由 X-After-Sale-Token 在 Controller 内校验
+                    "/api/internal/**",
                     // 本地商品图片（爬虫产物，无需鉴权）
                     "/img/**"
                 ).permitAll()
@@ -77,6 +82,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/cart/**", "/api/order/**", "/api/coupon/claim",
                                  "/api/coupon/mine", "/api/address/**", "/api/favorite/**",
                                  "/api/wallet/**", "/api/user/me", "/api/user/**",
+                                 "/api/after-sales/**",
                                  "/api/checkout/**", "/api/behavior/report")
                     .hasRole("USER")
                 // 其他接口需登录

@@ -90,14 +90,35 @@ class CartServiceImplTest {
 
     // ============ add ============
 
+    private TProduct product(Long id, int status) {
+        TProduct p = new TProduct();
+        p.setId(id);
+        p.setStatus(status);
+        p.setPrice(new BigDecimal("9.90"));
+        return p;
+    }
+
+    private TProductSku sku(Long id, Long productId, int status, String price) {
+        TProductSku s = new TProductSku();
+        s.setId(id);
+        s.setProductId(productId);
+        s.setStatus(status);
+        s.setPrice(new BigDecimal(price));
+        s.setSpecName("中份");
+        return s;
+    }
+
     @Test
-    @DisplayName("add 全新商品 → 新建记录，默认 selected=1")
+    @DisplayName("add 全新商品 → 价格从 SKU 读取，默认 selected=1")
     void add_newItem() {
+        when(productMapper.selectById(100L)).thenReturn(product(100L, 1));
+        when(skuMapper.selectById(10L)).thenReturn(sku(10L, 100L, 1, "9.90"));
         when(cartMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
 
-        TCartItem result = cartService.add(1L, 100L, 10L, 2, new BigDecimal("9.90"), "大份");
+        TCartItem result = cartService.add(1L, 100L, 10L, 2);
 
         assertThat(result.getSelected()).isEqualTo(1);
+        assertThat(result.getPrice()).isEqualByComparingTo("9.90");
         verify(cartMapper).insert(any(TCartItem.class));
     }
 
@@ -105,10 +126,11 @@ class CartServiceImplTest {
     @DisplayName("add 已存在商品 → 数量累加而非新建")
     void add_existingItem_accumulatesQuantity() {
         TCartItem exist = item(1L, 1L, 100L, 10L, 2, 1);
+        when(productMapper.selectById(100L)).thenReturn(product(100L, 1));
+        when(skuMapper.selectById(10L)).thenReturn(sku(10L, 100L, 1, "9.90"));
         when(cartMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(exist);
 
-        // 传具体 price 避免触发 sku 回填逻辑
-        TCartItem result = cartService.add(1L, 100L, 10L, 3, new BigDecimal("9.90"), "默认规格");
+        TCartItem result = cartService.add(1L, 100L, 10L, 3);
 
         assertThat(result.getQuantity()).isEqualTo(5); // 2 + 3
         verify(cartMapper, never()).insert(any(TCartItem.class));
@@ -118,36 +140,45 @@ class CartServiceImplTest {
     @Test
     @DisplayName("add 数量 0 / null → BAD_REQUEST")
     void add_invalidQuantity() {
-        assertThatThrownBy(() -> cartService.add(1L, 100L, 10L, 0, null, null))
+        assertThatThrownBy(() -> cartService.add(1L, 100L, 10L, 0))
                 .isInstanceOf(BizException.class)
                 .satisfies(ex -> assertThat(((BizException) ex).getCode()).isEqualTo(ResultCode.BAD_REQUEST.getCode()));
     }
 
     @Test
-    @DisplayName("add price/specName 缺失时按 sku 自动补")
-    void add_fillsFromSku() {
+    @DisplayName("add 价格与规格名一律取 SKU，不受客户端影响")
+    void add_priceAndSpecFromSku() {
+        when(productMapper.selectById(100L)).thenReturn(product(100L, 1));
+        TProductSku sku = sku(10L, 100L, 1, "12.00");
+        when(skuMapper.selectById(10L)).thenReturn(sku);
         when(cartMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
 
-        TProductSku sku = new TProductSku();
-        sku.setId(10L);
-        sku.setPrice(new BigDecimal("12.00"));
-        sku.setSpecName("中份");
-        when(skuMapper.selectById(10L)).thenReturn(sku);
-
-        TCartItem result = cartService.add(1L, 100L, 10L, 1, null, null);
+        TCartItem result = cartService.add(1L, 100L, 10L, 1);
 
         assertThat(result.getPrice()).isEqualByComparingTo("12.00");
         assertThat(result.getSpecName()).isEqualTo("中份");
     }
 
     @Test
-    @DisplayName("add price 仍缺失且 sku 也没了 → BAD_REQUEST")
-    void add_priceStillMissing() {
-        // sku 也不存在 → price 仍 null → 抛异常（cartMapper 在 price==null 校验之前不会被调用）
-        org.mockito.Mockito.lenient().when(skuMapper.selectById(10L)).thenReturn(null);
+    @DisplayName("add SKU 不存在 → BAD_REQUEST（不再回退到客户端价格）")
+    void add_skuMissing() {
+        when(productMapper.selectById(100L)).thenReturn(product(100L, 1));
+        when(skuMapper.selectById(10L)).thenReturn(null);
 
-        assertThatThrownBy(() -> cartService.add(1L, 100L, 10L, 1, null, null))
-                .isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> cartService.add(1L, 100L, 10L, 1))
+                .isInstanceOf(BizException.class)
+                .satisfies(ex -> assertThat(((BizException) ex).getCode()).isEqualTo(ResultCode.BAD_REQUEST.getCode()));
+    }
+
+    @Test
+    @DisplayName("add SKU 不属于该商品 → BAD_REQUEST")
+    void add_skuProductMismatch() {
+        when(productMapper.selectById(100L)).thenReturn(product(100L, 1));
+        when(skuMapper.selectById(10L)).thenReturn(sku(10L, 999L, 1, "0.01"));
+
+        assertThatThrownBy(() -> cartService.add(1L, 100L, 10L, 1))
+                .isInstanceOf(BizException.class)
+                .satisfies(ex -> assertThat(((BizException) ex).getCode()).isEqualTo(ResultCode.BAD_REQUEST.getCode()));
     }
 
     // ============ updateQuantity ============

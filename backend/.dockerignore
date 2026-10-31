@@ -2,3 +2,5 @@ target/
 .idea/
 *.iml
 docs/
+# 本地凭据文件不入镜像，容器里由环境变量注入
+src/main/resources/application-local.yml

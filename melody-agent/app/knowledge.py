@@ -182,12 +182,44 @@ class KnowledgeBase:
         k = top_k or settings.kb_top_k
         if self.count() == 0:
             return []
-        qv = self.model.embed_query(query)
+        try:
+            qv = self.model.embed_query(query)
+        except Exception as e:  # noqa: BLE001
+            # 本地没装 onnxruntime/tokenizers 时（例如 Python 3.13 联调环境）
+            # 自动降级为关键词检索，保证售后/规则问答仍可用。
+            log.warning("[kb] vector query unavailable (%s), fallback keyword", e)
+            return self._keyword_search(query, k)
         sims = self.vectors @ qv  # 已归一化，点积即余弦相似度
         order = np.argsort(-sims)[: min(k, len(sims))]
         return [{"text": self.texts[i], "source": self.sources[i],
                  "heading": self.headings[i], "score": round(float(sims[i]), 4)}
                 for i in order]
+
+    def _keyword_search(self, query: str, k: int) -> list[dict]:
+        import re
+
+        def terms(text: str) -> set[str]:
+            text = (text or "").lower()
+            out = set(re.findall(r"[a-z0-9]+", text))
+            for run in re.findall(r"[\u4e00-\u9fff]+", text):
+                for i in range(max(1, len(run) - 1)):
+                    out.add(run[i:i + 2])
+            return out
+
+        q = terms(query)
+        if not q:
+            return []
+        scored = []
+        for i, text in enumerate(self.texts):
+            d = terms(text)
+            overlap = len(q & d)
+            if overlap:
+                scored.append((overlap / (len(q) ** 0.5), i))
+        scored.sort(reverse=True)
+        return [{"text": self.texts[i], "source": self.sources[i],
+                 "heading": self.headings[i],
+                 "score": round(min(1.0, score / 10.0), 4)}
+                for score, i in scored[:k]]
 
 
 def get_kb() -> KnowledgeBase:

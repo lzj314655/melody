@@ -62,8 +62,6 @@ class CartControllerTest {
         r.setProductId(100L);
         r.setSkuId(10L);
         r.setQuantity(2);
-        r.setPrice(new BigDecimal("9.90"));
-        r.setSpecName("默认");
         return r;
     }
 
@@ -82,7 +80,7 @@ class CartControllerTest {
     void add_ok() throws Exception {
         TCartItem item = new TCartItem();
         item.setId(1L);
-        when(cartService.add(anyLong(), anyLong(), anyLong(), any(), any(), any())).thenReturn(item);
+        when(cartService.add(anyLong(), anyLong(), anyLong(), any())).thenReturn(item);
 
         mockMvc.perform(post("/api/cart")
                         .contentType(MediaType.APPLICATION_JSON)

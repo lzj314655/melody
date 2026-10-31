@@ -81,6 +81,7 @@ class OrderControllerTest {
     private com.melody.entity.TUserAddress address(Long id) {
         com.melody.entity.TUserAddress a = new com.melody.entity.TUserAddress();
         a.setId(id);
+        a.setUserId(1L);
         a.setName("张三");
         a.setPhone("13800000000");
         a.setProvince("北京");
@@ -109,13 +110,24 @@ class OrderControllerTest {
     @Test
     @DisplayName("GET /api/order/{id} 存在")
     void detail_ok() throws Exception {
-        when(orderService.getById(1L)).thenReturn(order(1L, "PENDING_SHIP"));
+        when(orderService.getByIdForUser(1L, 1L)).thenReturn(order(1L, "PENDING_SHIP"));
         when(orderItemMapper.selectList(any())).thenReturn(List.of());
         mockMvc.perform(get("/api/order/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.orderNo").value("ORD-001"))
                 .andExpect(jsonPath("$.data.status").value("PENDING_SHIP"))
                 .andExpect(jsonPath("$.data.items").isArray());
+    }
+
+    @Test
+    @DisplayName("GET /api/order/{id} 他人订单 → FORBIDDEN")
+    void detail_notOwner() throws Exception {
+        doThrow(new BizException(com.melody.common.ResultCode.FORBIDDEN, "无权查看该订单"))
+                .when(orderService).getByIdForUser(2L, 1L);
+
+        mockMvc.perform(get("/api/order/2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(com.melody.common.ResultCode.FORBIDDEN.getCode()));
     }
 
     @Test

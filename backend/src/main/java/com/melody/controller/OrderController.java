@@ -2,12 +2,14 @@ package com.melody.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.melody.common.R;
+import com.melody.common.ResultCode;
 import com.melody.common.SecurityUtils;
 import com.melody.dto.CheckoutDTOs;
 import com.melody.dto.RechargeDTOs;
 import com.melody.entity.TOrder;
 import com.melody.entity.TOrderItem;
 import com.melody.entity.TUserAddress;
+import com.melody.exception.BizException;
 import com.melody.mapper.TOrderItemMapper;
 import com.melody.mapper.TUserAddressMapper;
 import com.melody.service.IAlipayService;
@@ -50,7 +52,16 @@ public class OrderController {
 
     @GetMapping("/{id}")
     public R<Map<String, Object>> detail(@PathVariable Long id) {
-        TOrder o = orderService.getById(id);
+        // 必须按当前用户校验归属，避免遍历 id 读取他人订单
+        TOrder o = orderService.getByIdForUser(id, SecurityUtils.currentId());
+        Map<String, Object> map = attachItems(Collections.singletonList(o)).get(0);
+        return R.ok(map);
+    }
+
+    /** 按订单号查本人订单（售后对话里用户常只报订单号） */
+    @GetMapping("/by-no/{orderNo}")
+    public R<Map<String, Object>> detailByNo(@PathVariable String orderNo) {
+        TOrder o = orderService.getByOrderNoForUser(orderNo, SecurityUtils.currentId());
         Map<String, Object> map = attachItems(Collections.singletonList(o)).get(0);
         return R.ok(map);
     }
@@ -58,9 +69,12 @@ public class OrderController {
     /** F-U-040 提交订单 */
     @PostMapping
     public R<TOrder> create(@Valid @RequestBody CheckoutDTOs.CheckoutRequest req) {
+        Long userId = SecurityUtils.currentId();
         TUserAddress addr = addressMapper.selectById(req.getAddressId());
-        if (addr == null) throw new IllegalArgumentException("收货地址不存在");
-        return R.ok("下单成功", orderService.create(SecurityUtils.currentId(),
+        if (addr == null || !userId.equals(addr.getUserId())) {
+            throw new BizException(ResultCode.FORBIDDEN, "收货地址不存在或无权使用");
+        }
+        return R.ok("下单成功", orderService.create(userId,
                 req.getCartItemIds(), addr, req.getUserCouponId(), req.getPayMethod()));
     }
 

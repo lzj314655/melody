@@ -12,6 +12,10 @@ USE melody_shop;
 -- 关闭 FK 检查，方便重建
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- 售后多 Agent 工单（新增模块，放在最前 drop 以兼容重跑）
+DROP TABLE IF EXISTS t_after_sale_event;
+DROP TABLE IF EXISTS t_after_sale_ticket;
+
 -- =============================================================================
 -- 1. 用户与地址
 -- =============================================================================
@@ -516,17 +520,59 @@ CREATE TABLE t_operation_log (
   KEY idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='后台操作日志表 (F-C-007)';
 
+-- =============================================================================
+-- 28. 售后多 Agent 工单（电商客服 + 售后 + 风控）
+-- =============================================================================
+
+CREATE TABLE t_after_sale_ticket (
+  id              BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+  ticket_no       VARCHAR(40)  NOT NULL                COMMENT '工单号',
+  user_id         BIGINT       NOT NULL                COMMENT '用户 ID',
+  order_id        BIGINT       NOT NULL                COMMENT '订单 ID',
+  intent          VARCHAR(32)  DEFAULT NULL            COMMENT '意图：LOGISTICS/QUALITY/REFUND/MALICIOUS/OTHER',
+  status          VARCHAR(24)  NOT NULL DEFAULT 'PENDING_REVIEW'
+                  COMMENT 'PENDING_REVIEW/APPROVED/REJECTED/REFUNDED/CLOSED',
+  risk_level      VARCHAR(16)  DEFAULT NULL            COMMENT 'LOW/MEDIUM/HIGH',
+  risk_score      INT          DEFAULT 0               COMMENT '风控分 0-100',
+  decision        VARCHAR(32)  DEFAULT NULL            COMMENT 'AUTO_APPROVE/MANUAL_REVIEW/REJECT',
+  decision_reason VARCHAR(500) DEFAULT NULL            COMMENT '决策原因/命中规则',
+  refund_amount   DECIMAL(10,2) DEFAULT NULL           COMMENT '退款金额',
+  thread_id       VARCHAR(64)  DEFAULT NULL            COMMENT 'LangGraph thread_id，便于恢复',
+  reply           TEXT         NULL                    COMMENT '给用户的回复',
+  assignee        VARCHAR(50)  DEFAULT NULL            COMMENT '处理人',
+  created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_ticket_no (ticket_no),
+  KEY idx_ast_user (user_id),
+  KEY idx_ast_order (order_id),
+  KEY idx_ast_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='售后工单';
+
+CREATE TABLE t_after_sale_event (
+  id         BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
+  ticket_id  BIGINT      NOT NULL                COMMENT '工单 ID',
+  step       VARCHAR(40) NOT NULL                COMMENT '节点：INTENT/ORDER/RISK/POLICY/DECISION/REFUND/REPLY',
+  actor      VARCHAR(50) DEFAULT 'agent'         COMMENT 'agent/system/admin',
+  payload    TEXT        NULL                    COMMENT '节点输入输出 JSON（审计用）',
+  created_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_ase_ticket (ticket_id, id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='售后工单 Agent 事件审计';
+
 -- 恢复 FK 检查
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- =============================================================================
 -- DDL 结束
--- 27 张表全部建完：t_user / t_user_address / t_category / t_product /
+-- 29 张表全部建完：t_user / t_user_address / t_category / t_product /
 --                  t_product_sku / t_product_image / t_product_review /
 --                  t_cart_item / t_favorite / t_order / t_order_item /
 --                  t_coupon / t_user_coupon / t_promotion /
 --                  t_wallet_account / t_wallet_log / t_point_log / t_growth_log /
 --                  user_behavior_log /
 --                  t_admin / t_role / t_permission / t_admin_role / t_role_permission /
---                  t_banner / t_announcement / t_operation_log
+--                  t_banner / t_announcement / t_operation_log /
+--                  t_after_sale_ticket / t_after_sale_event
 -- =============================================================================

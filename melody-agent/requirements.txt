@@ -8,3 +8,5 @@ numpy
 tokenizers
 onnxruntime
 pymysql
+# 售后多 Agent 编排（意图 → 订单 → 风控/政策 → 决策 → 回复）
+langgraph>=1.0,<2

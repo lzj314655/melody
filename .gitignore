@@ -36,6 +36,7 @@ dist/
 !metadata.json
 .bishe/
 .tmp-debug/
+.tmp-dev/
 
 # === Logs / OS ===
 *.log
@@ -44,6 +45,7 @@ Thumbs.db
 
 # === melody-agent（Python 智能助手）===
 melody-agent/venv/
+melody-agent/.vendor/
 melody-agent/.env
 melody-agent/data/
 __pycache__/

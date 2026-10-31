@@ -49,9 +49,18 @@ logging:
     com.melody: debug
     com.baomidou.mybatisplus: info
 
+# JWT 签名密钥：必须由环境变量注入（本地裸机放 application-local.yml）
+# 留空会启动失败，这是刻意设计——避免用仓库里的默认值签发 token
+melody:
+  jwt:
+    secret: ${JWT_SECRET:}
+
 # 本地商品图片根目录（WebMvcConfig /img/** 映射）；Docker 内挂载到 /app/image
 app:
   image-root: ${APP_IMAGE_ROOT:D:\bishe\image}
+  # Python 售后 LangGraph 服务调用内部接口的共享令牌（为空则内部接口全部拒绝）
+  after-sale:
+    internal-token: ${AFTER_SALE_INTERNAL_TOKEN:}
 
 # Alipay sandbox (PC web pay + active query)
 # privateKey = app private key (sign requests); publicKey = alipay public key (verify callbacks)
@@ -63,10 +72,10 @@ alipay:
   charset: UTF-8
   signType: RSA2
   format: json
-  # wallet recharge: browser redirect page after pay (vite default 5173)
-  returnUrl: ${ALIPAY_RETURN_URL:http://localhost:5173/recharge-result}
+  # wallet recharge: browser redirect page after pay（前端 dev / nginx 均为 3000）
+  returnUrl: ${ALIPAY_RETURN_URL:http://localhost:3000/recharge-result}
   # async notify (needs public reach; sandbox local can't reach, active query as fallback)
   notifyUrl: ${ALIPAY_NOTIFY_URL:http://localhost:8080/api/wallet/recharge/notify}
   # order pay: redirect to order detail page ({id} replaced at runtime) + independent notify
-  orderReturnUrl: ${ALIPAY_ORDER_RETURN_URL:http://localhost:5173/order/{id}}
+  orderReturnUrl: ${ALIPAY_ORDER_RETURN_URL:http://localhost:3000/order/{id}}
   orderNotifyUrl: ${ALIPAY_ORDER_NOTIFY_URL:http://localhost:8080/api/order/alipay/notify}

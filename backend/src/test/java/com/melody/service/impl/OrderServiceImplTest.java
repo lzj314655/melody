@@ -42,9 +42,11 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -148,6 +150,8 @@ class OrderServiceImplTest {
             if (!TransactionSynchronizationManager.isSynchronizationActive()) {
                 TransactionSynchronizationManager.initSynchronization();
             }
+            // 原子扣库存默认成功；库存不足的用例在进入扣减前就会抛异常
+            lenient().when(skuMapper.deductStock(anyLong(), anyInt())).thenReturn(1);
         }
 
         @AfterEach
@@ -369,6 +373,7 @@ class OrderServiceImplTest {
 
             TUserCoupon uc = new TUserCoupon();
             uc.setId(5L);
+            uc.setUserId(1L);
             uc.setStatus("可用");
             when(userCouponMapper.selectById(5L)).thenReturn(uc);
 
@@ -394,6 +399,7 @@ class OrderServiceImplTest {
         when(orderMapper.selectById(1L)).thenReturn(o);
         when(orderMapper.markPaidByWallet(1L)).thenReturn(1);
         when(orderMapper.selectById(1L)).thenReturn(o);
+        when(userMapper.selectById(1L)).thenReturn(newUser(1L, 1));
 
         TOrder result = orderService.payByWallet(1L, 1L);
 
@@ -440,6 +446,7 @@ class OrderServiceImplTest {
         o.setTotalPrice(new BigDecimal("100"));
         when(orderMapper.markPaidByAlipay("ORD-001", "TRADE-1")).thenReturn(1);
         when(orderMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(o);
+        when(userMapper.selectById(1L)).thenReturn(newUser(1L, 1));
 
         orderService.confirmAlipayPaid("ORD-001", "TRADE-1");
 
@@ -466,12 +473,30 @@ class OrderServiceImplTest {
         o.setUserId(1L);
         o.setStatus("PENDING_PAY");
         when(orderMapper.selectById(1L)).thenReturn(o);
+        when(orderMapper.markCanceled(1L)).thenReturn(1);
         when(orderItemMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(new ArrayList<>(List.of()));
 
         orderService.cancel(1L, 1L);
 
         assertThat(o.getStatus()).isEqualTo("CANCELED");
-        verify(orderMapper).updateById(o);
+        verify(orderMapper).markCanceled(1L);
+        verify(orderMapper, never()).updateById(o);
+    }
+
+    @Test
+    @DisplayName("cancel 并发/重复取消 → 原子流转失败，不再回滚第二次库存")
+    void cancel_alreadyChanged() {
+        TOrder o = new TOrder();
+        o.setId(1L);
+        o.setUserId(1L);
+        o.setStatus("PENDING_PAY");
+        when(orderMapper.selectById(1L)).thenReturn(o);
+        when(orderMapper.markCanceled(1L)).thenReturn(0);
+
+        assertThatThrownBy(() -> orderService.cancel(1L, 1L))
+                .isInstanceOf(BizException.class);
+
+        verify(orderItemMapper, never()).selectList(any(LambdaQueryWrapper.class));
     }
 
     @Test
@@ -557,11 +582,30 @@ class OrderServiceImplTest {
         o.setTotalPrice(new BigDecimal("100"));
         o.setStatus("AFTER_SALE");
         when(orderMapper.selectById(1L)).thenReturn(o);
+        when(orderMapper.markRefunded(1L)).thenReturn(1);
 
         orderService.approveRefund(1L);
 
+        verify(orderMapper).markRefunded(1L);
         verify(walletService).refund(1L, new BigDecimal("100"), 1L);
         assertThat(o.getStatus()).isEqualTo("REFUNDED");
+    }
+
+    @Test
+    @DisplayName("approveRefund 并发/重复审核 → 原子流转失败，不再退第二次钱")
+    void approveRefund_alreadyRefunded() {
+        TOrder o = new TOrder();
+        o.setId(1L);
+        o.setUserId(1L);
+        o.setTotalPrice(new BigDecimal("100"));
+        o.setStatus("AFTER_SALE");
+        when(orderMapper.selectById(1L)).thenReturn(o);
+        when(orderMapper.markRefunded(1L)).thenReturn(0);
+
+        assertThatThrownBy(() -> orderService.approveRefund(1L))
+                .isInstanceOf(BizException.class);
+
+        verify(walletService, never()).refund(anyLong(), any(), anyLong());
     }
 
     // ============ listByUser / listAll ============

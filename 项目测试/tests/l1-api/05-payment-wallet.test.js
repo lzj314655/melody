@@ -42,10 +42,17 @@ describe('L1-05 支付 / 钱包', () => {
     log.ok(`钱包流水条数=${(data.records || data || []).length}`);
   });
 
-  it('05.04 充值 100 元', async () => {
-    // /wallet/recharge 返 R<Void>,data 为 undefined
-    await http.post('/wallet/recharge?amount=100', null, { token });
-    log.ok('充值 100 成功(后端返 R<Void>)');
+  it('05.04 创建支付宝充值单（不再直接加余额）', async function () {
+    let data;
+    try {
+      data = await http.post('/wallet/recharge?amount=1', null, { token });
+    } catch (e) {
+      // 沙箱未配置 / 无外网时跳过；该接口只负责创建支付单，不产生余额
+      this.skip();
+    }
+    expect(data).to.have.property('outTradeNo');
+    expect(data).to.have.property('payForm');
+    log.ok(`充值单创建成功 outTradeNo=${data.outTradeNo}`);
   });
 
   it('05.05 充值负数应失败', async () => {

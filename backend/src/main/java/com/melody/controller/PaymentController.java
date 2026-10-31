@@ -23,7 +23,7 @@ public class PaymentController {
 
     @GetMapping("/{orderId}/status")
     public R<Map<String, Object>> status(@PathVariable Long orderId) {
-        var o = orderService.getById(orderId);
+        var o = orderService.getByIdForUser(orderId, SecurityUtils.currentId());
         return R.ok(Map.of(
                 "orderId", o.getId(),
                 "status", o.getStatus(),

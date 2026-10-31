@@ -25,8 +25,9 @@ class MelodyBackendClient:
     # ---------- 基础 ----------
 
     def _request(self, method: str, path: str, *, token: str | None = None,
-                 params: dict | None = None, json_body: dict | None = None):
-        headers = {}
+                 params: dict | None = None, json_body: dict | None = None,
+                 extra_headers: dict | None = None):
+        headers = dict(extra_headers or {})
         if token:
             headers["Authorization"] = f"Bearer {token}"
         try:
@@ -120,5 +121,48 @@ class MelodyBackendClient:
     def order_detail(self, token: str, order_id: int) -> dict:
         return self._request("GET", f"/api/order/{order_id}", token=token)
 
+    def order_detail_by_no(self, token: str, order_no: str) -> dict:
+        return self._request("GET", f"/api/order/by-no/{order_no}", token=token)
+
     def cancel_order(self, token: str, order_id: int):
         return self._request("PUT", f"/api/order/{order_id}/cancel", token=token)
+
+    # ---------- 管理员身份校验（售后后台接口用） ----------
+
+    def admin_me(self, token: str) -> dict:
+        return self._request("GET", "/api/admin/auth/me", token=token)
+
+    # ---------- 售后工单内部接口（Python LangGraph → Java） ----------
+
+    def _after_sale_headers(self) -> dict:
+        if not settings.after_sale_internal_token:
+            raise BackendError(500, "未配置 AFTER_SALE_INTERNAL_TOKEN，售后内部接口不可用")
+        return {"X-After-Sale-Token": settings.after_sale_internal_token}
+
+    def after_sale_create_ticket(self, payload: dict) -> dict:
+        return self._request("POST", "/api/internal/after-sales/tickets",
+                             json_body=payload, extra_headers=self._after_sale_headers())
+
+    def after_sale_get_ticket(self, ticket_id: int) -> dict:
+        return self._request("GET", f"/api/internal/after-sales/tickets/{ticket_id}",
+                             extra_headers=self._after_sale_headers())
+
+    def after_sale_update_ticket(self, ticket_id: int, payload: dict) -> dict:
+        return self._request("PATCH", f"/api/internal/after-sales/tickets/{ticket_id}",
+                             json_body=payload, extra_headers=self._after_sale_headers())
+
+    def after_sale_event(self, ticket_id: int, step: str, actor: str, payload: str) -> None:
+        self._request("POST", f"/api/internal/after-sales/tickets/{ticket_id}/events",
+                      json_body={"step": step, "actor": actor, "payload": payload},
+                      extra_headers=self._after_sale_headers())
+
+    def after_sale_risk(self, user_id: int, product_id: int | None = None) -> dict:
+        params = {"userId": user_id}
+        if product_id is not None:
+            params["productId"] = product_id
+        return self._request("GET", "/api/internal/after-sales/risk",
+                             params=params, extra_headers=self._after_sale_headers())
+
+    def after_sale_refund(self, ticket_id: int) -> dict:
+        return self._request("POST", f"/api/internal/after-sales/tickets/{ticket_id}/refund",
+                             extra_headers=self._after_sale_headers())

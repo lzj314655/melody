@@ -53,5 +53,10 @@ class Settings:
     http_timeout: float = 15.0
     session_keep_messages: int = _get_int("SESSION_KEEP_MESSAGES", 500)  # 单会话落库上限
 
+    # 售后多 Agent（LangGraph）
+    after_sale_internal_token: str = _get("AFTER_SALE_INTERNAL_TOKEN")
+    after_sale_enabled: bool = _get("AFTER_SALE_ENABLED", "true").lower() not in ("0", "false", "no")
+    after_sale_kb_top_k: int = _get_int("AFTER_SALE_KB_TOP_K", 3)
+
 
 settings = Settings()

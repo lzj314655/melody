@@ -74,14 +74,22 @@ class JwtUtilTest {
     }
 
     @Test
-    @DisplayName("短 secret 自动补齐到 32 字节不报错")
-    void shortSecret_autoPadTo32Bytes() {
+    @DisplayName("短 secret → 启动失败（不再自动补齐弱密钥）")
+    void shortSecret_rejected() {
         JwtUtil util = new JwtUtil();
         ReflectionTestUtils.setField(util, "secret", "abc"); // 仅 3 字节
-        ReflectionTestUtils.invokeMethod(util, "init");
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(util, "init"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("32");
+    }
 
-        String token = util.generate("1", "u", "user", List.of());
-        assertThat(token).isNotBlank();
-        assertThat(util.parse(token).getSubject()).isEqualTo("1");
+    @Test
+    @DisplayName("空 secret → 启动失败")
+    void blankSecret_rejected() {
+        JwtUtil util = new JwtUtil();
+        ReflectionTestUtils.setField(util, "secret", "   ");
+        assertThatThrownBy(() -> ReflectionTestUtils.invokeMethod(util, "init"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("JWT");
     }
 }

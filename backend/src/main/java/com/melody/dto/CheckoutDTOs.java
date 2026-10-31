@@ -19,9 +19,8 @@ public class CheckoutDTOs {
         private Long skuId;
         @NotNull
         private Integer quantity;
-        /** 加购时价格（快照）—— 可空，service 层会按 skuId 自动补 */
-        private java.math.BigDecimal price;
-        private String specName;
+        // 注意：价格与规格名一律由服务端按 skuId 查询，绝不接受客户端传入，
+        // 否则可构造 price=0.01 的请求以极低价格下单。
     }
 
     @Data

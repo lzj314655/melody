@@ -3,9 +3,11 @@ package com.melody.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.melody.common.R;
+import com.melody.common.ResultCode;
 import com.melody.common.SecurityUtils;
 import com.melody.entity.TUser;
 import com.melody.entity.TUserAddress;
+import com.melody.exception.BizException;
 import com.melody.mapper.TUserAddressMapper;
 import com.melody.service.IUserService;
 import jakarta.validation.Valid;
@@ -77,6 +79,10 @@ public class UserController {
     @Transactional
     public R<TUserAddress> updateAddress(@PathVariable Long id, @RequestBody TUserAddress addr) {
         Long userId = SecurityUtils.currentId();
+        TUserAddress existing = addressMapper.selectById(id);
+        if (existing == null || !userId.equals(existing.getUserId())) {
+            throw new BizException(ResultCode.FORBIDDEN, "地址不存在或无权修改");
+        }
         addr.setId(id);
         addr.setUserId(userId);
 
@@ -103,6 +109,11 @@ public class UserController {
 
     @DeleteMapping("/api/address/{id}")
     public R<Void> deleteAddress(@PathVariable Long id) {
+        Long userId = SecurityUtils.currentId();
+        TUserAddress existing = addressMapper.selectById(id);
+        if (existing == null || !userId.equals(existing.getUserId())) {
+            throw new BizException(ResultCode.FORBIDDEN, "地址不存在或无权删除");
+        }
         addressMapper.deleteById(id);
         return R.ok();
     }

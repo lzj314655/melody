@@ -176,9 +176,19 @@ public class CouponServiceImpl implements ICouponService {
             userCouponMapper.updateById(uc);
             throw new BizException(ResultCode.BAD_REQUEST, "券已过期");
         }
+        // 原子核销：并发用同一张券下两单时，只有一笔能成功
+        int affected = userCouponMapper.markUsed(uc.getId(), userId, orderId);
+        if (affected != 1) {
+            throw new BizException(ResultCode.BAD_REQUEST, "券已被使用，请刷新后重试");
+        }
         uc.setStatus("已用");
         uc.setUsedAt(LocalDateTime.now());
         uc.setUsedOrderId(orderId);
-        userCouponMapper.updateById(uc);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void releaseByOrder(Long userId, Long orderId) {
+        userCouponMapper.releaseByOrder(userId, orderId);
     }
 }

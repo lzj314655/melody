@@ -339,7 +339,7 @@ const handleSubmitRefund = async () => {
               </p>
             </div>
 
-            <div class="flex gap-2 shrink-0">
+            <div class="flex flex-wrap justify-end gap-2 shrink-0">
               <template v-if="order.status === 'PENDING_PAY'">
                 <p v-if="alipayPolling" class="text-[11px] text-[#ff6b35] font-bold w-full mb-1 flex items-center gap-1">
                   <span class="material-symbols-outlined text-sm animate-spin">progress_activity</span>
@@ -406,6 +406,13 @@ const handleSubmitRefund = async () => {
                 disabled
               >
                 等待管理员审核
+              </button>
+              <!-- 所有订单状态都可进入智能客服 -->
+              <button
+                @click="router.push(`/after-sales/${order.id}`)"
+                class="px-3 py-2.5 bg-[#fff0e8] border border-[#ffdbcc] text-[#ff6b35] hover:bg-[#ffe4d6] font-bold rounded-xl text-xs cursor-pointer"
+              >
+                智能客服
               </button>
             </div>
           </div>

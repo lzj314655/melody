@@ -139,6 +139,14 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <!-- Mockito 的 inline mock maker 需要动态 attach；部分受限环境/新版 JDK 需显式允许 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Djdk.attach.allowAttachSelf=true</argLine>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

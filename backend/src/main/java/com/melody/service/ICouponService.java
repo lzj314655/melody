@@ -25,6 +25,9 @@ public interface ICouponService {
     /** 核销（下单成功后调用） */
     void consume(Long userId, Long userCouponId, Long orderId);
 
+    /** 取消未付款订单时退回该订单占用的优惠券 */
+    void releaseByOrder(Long userId, Long orderId);
+
     /** 后台：创建优惠券 */
     TCoupon create(TCoupon c);
 

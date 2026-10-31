@@ -15,6 +15,7 @@ import WalletLogsView from "@/views/frontend/WalletLogsView.vue";
 import RechargeResultView from "@/views/frontend/RechargeResultView.vue";
 import LoginView from "@/views/frontend/LoginView.vue";
 import RegisterView from "@/views/frontend/RegisterView.vue";
+import AfterSalesView from "@/views/frontend/AfterSalesView.vue";
 
 // Import Admin Views
 import DashboardView from "@/views/admin/DashboardView.vue";
@@ -27,6 +28,7 @@ import AdminSettingsView from "@/views/admin/SettingsView.vue";
 import AdminLoginView from "@/views/admin/AdminLoginView.vue";
 import CategoryView from "@/views/admin/CategoryView.vue";
 import AdminManageView from "@/views/admin/AdminManageView.vue";
+import AdminAfterSalesView from "@/views/admin/AfterSalesView.vue";
 
 const routes = [
   // Frontend routes
@@ -36,6 +38,7 @@ const routes = [
   { path: "/profile", name: "profile", component: ProfileView, meta: { title: "个人中心", requiresAuth: true } },
   { path: "/order", name: "order", component: OrderView, meta: { title: "我的订单", requiresAuth: true } },
   { path: "/order/:id", name: "order-detail", component: OrderDetailView, meta: { title: "订单详情", requiresAuth: true } },
+  { path: "/after-sales/:orderId", name: "after-sales", component: AfterSalesView, meta: { title: "智能客服", requiresAuth: true } },
   { path: "/favorites", name: "favorites", component: FavoritesView, meta: { title: "我的收藏", requiresAuth: true } },
   { path: "/coupons", name: "coupons", component: FrontendCouponsView, meta: { title: "领券中心", requiresAuth: true } },
   { path: "/address", name: "address", component: AddressView, meta: { title: "收货地址", requiresAuth: true } },
@@ -50,6 +53,7 @@ const routes = [
   { path: "/admin/products", name: "admin-products", component: ProductsView, meta: { title: "管理后台 - 商品管理", requiresAdmin: true } },
   { path: "/admin/categories", name: "admin-categories", component: CategoryView, meta: { title: "管理后台 - 分类管理", requiresAdmin: true } },
   { path: "/admin/orders", name: "admin-orders", component: OrdersView, meta: { title: "管理后台 - 订单管理", requiresAdmin: true } },
+  { path: "/admin/after-sales", name: "admin-after-sales", component: AdminAfterSalesView, meta: { title: "管理后台 - 售后工作台", requiresAdmin: true } },
   { path: "/admin/orders/:id", name: "admin-order-detail", component: AdminOrderDetailView, meta: { title: "管理后台 - 订单详情", requiresAdmin: true } },
   { path: "/admin/coupons", name: "admin-coupons", component: AdminCouponsView, meta: { title: "管理后台 - 营销管理", requiresAdmin: true } },
   { path: "/admin/users", name: "admin-users", component: UsersView, meta: { title: "管理后台 - 用户管理", requiresAdmin: true } },
